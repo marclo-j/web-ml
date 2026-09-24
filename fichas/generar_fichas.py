@@ -36,6 +36,9 @@ FILA_ENCABEZADO = 9
 FILA_INICIO = 10
 CELDA_ESCALA = f"$B${FILA_ESCALA}"
 
+# Decisión D3 (docs/VARIABLES.md)
+PERIODO_CORTE = "I bimestre"
+
 AZUL = "1F4E78"
 GRIS = "E7E6E6"
 AMBAR = "FFE699"
@@ -462,10 +465,7 @@ def escribir_metadatos(ws: Worksheet, ficha: Ficha) -> None:
     )
     campos = [
         ("Año lectivo", dv_entero(2024, 2026, "Año entre 2024 y 2026.")),
-        (
-            "Periodo de corte",
-            dv_lista("I bimestre,I trimestre", "Elija I bimestre o I trimestre."),
-        ),
+        ("Periodo de corte", dv_lista(PERIODO_CORTE, "El corte es el I bimestre.")),
         ("Fecha de inicio del periodo", None),
         ("Fecha de fin del periodo", None),
         ("Responsable del llenado (cargo)", None),
@@ -486,6 +486,7 @@ def escribir_metadatos(ws: Worksheet, ficha: Ficha) -> None:
             dv = validacion({"c": valor.coordinate})
             ws.add_data_validation(dv)
             dv.add(valor.coordinate)
+    ws["B3"] = PERIODO_CORTE
     if ficha.con_escala:
         ws[f"B{FILA_ESCALA}"] = "vigesimal"
     ws.column_dimensions["A"].width = 30
@@ -588,7 +589,7 @@ def hoja_instrucciones(wb: Workbook, ficha: Ficha) -> None:
         (
             "Periodo de corte",
             (
-                "Datos acumulados hasta el cierre del I bimestre o I trimestre. El "
+                "Datos acumulados hasta el cierre del I bimestre. El "
                 "mismo corte se usa para el PRE 2026 y para el histórico 2024–2025, "
                 "para que el modelo no aprenda de la ausencia de quien ya desertó."
             ),

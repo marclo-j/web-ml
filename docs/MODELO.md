@@ -19,7 +19,7 @@
 
 > ⚠️ Con la opción B el modelo solo aprende a reproducir las reglas con que se etiquetó. Las métricas saldrían altas pero no demostrarían capacidad predictiva real. Si se usa, debe declararse como limitación en la tesis.
 
-**Periodo de corte y fuga de información (decisión D3):** los indicadores del histórico se calculan con datos acumulados solo hasta el cierre del I bimestre / I trimestre, igual que el PRE 2026. Si se usara el año completo, un alumno que desertó a mitad de año tendría menos días asistidos y menos notas *porque ya se había ido*: el modelo aprendería la consecuencia de la deserción y no sus señales tempranas, y las métricas saldrían infladas.
+**Periodo de corte y fuga de información (decisión D3):** los indicadores del histórico se calculan con datos acumulados solo hasta el cierre del I bimestre, igual que el PRE 2026. Si se usara el año completo, un alumno que desertó a mitad de año tendría menos días asistidos y menos notas *porque ya se había ido*: el modelo aprendería la consecuencia de la deserción y no sus señales tempranas, y las métricas saldrían infladas.
 
 **Datos sintéticos:** `ml/generate_synthetic.py` genera datos con la misma estructura solo para validar que el pipeline funciona. Nunca se reportan como resultados.
 

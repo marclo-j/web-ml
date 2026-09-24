@@ -55,14 +55,14 @@ def generar_lote(n, anio, rng, momento, incluir_deserto):
         promedio_base = float(np.clip(rng.normal(13.5, 3.0), 5, 20))
         suma_notas = round(promedio_base * n_notas, 1)
 
-        # Asistencia: días lectivos del periodo de corte (I bimestre ~45 días,
-        # I trimestre ~60 días; decisión D3), no el año completo
-        dias_programados = int(rng.integers(45, 66))
+        # Asistencia: días lectivos del I bimestre (~9-10 semanas; decisión D3),
+        # no el año completo
+        dias_programados = int(rng.integers(40, 51))
         pct_asist_base = float(np.clip(rng.normal(0.85, 0.15), 0.4, 1.0))
         dias_asistidos = round(pct_asist_base * dias_programados)
 
-        # Apoyo familiar: entre 2 y 4 reuniones de padres en el periodo de corte
-        reuniones_programadas = int(rng.integers(2, 5))
+        # Apoyo familiar: entre 1 y 3 reuniones de padres en el I bimestre
+        reuniones_programadas = int(rng.integers(1, 4))
         pct_reun_base = float(np.clip(rng.normal(0.5, 0.3), 0.0, 1.0))
         reuniones_asistidas = round(pct_reun_base * reuniones_programadas)
 

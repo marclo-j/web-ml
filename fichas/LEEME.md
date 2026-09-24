@@ -14,7 +14,7 @@ Cada libro tiene la hoja **Instrucciones** (fórmula, periodo de corte, privacid
 No se llena en esta carpeta. Se copia la plantilla, se llena y se guarda en `data/raw/` (gitignored). Aquí solo se versionan plantillas vacías.
 
 ## Cómo se usan
-- **Periodo de corte:** I bimestre o I trimestre, igual para el PRE 2026 y para el histórico 2024–2025 (decisión D3 en `docs/VARIABLES.md`).
+- **Periodo de corte:** I bimestre (la IE trabaja por bimestres), igual para el PRE 2026 y para el histórico 2024–2025 (decisión D3 en `docs/VARIABLES.md`).
 - **Una fila por estudiante y momento.** El `codigo` (`EST-###`) une las 3 fichas; `grupo` se calcula a partir del grado (3.° = control, 4.° = experimental).
 - **Histórico 2024–2025:** mismas fichas, con `anio` y `deserto` (0/1) llenos.
 - **Colores:** gris = calculada (bloqueada) · ámbar = falta un dato obligatorio · rojo = valor inconsistente.

@@ -14,6 +14,15 @@
 
 ---
 
+### 2026-09-24 — Escala de calificación y corte bimestral
+**Tipo:** desarrollo
+**Decisiones tomadas:**
+- D3 precisado: la IE trabaja por bimestres, el corte es el **I bimestre** (fichas, `VARIABLES.md`, `MODELO.md`). `generate_synthetic.py` ajustado a 40–50 días lectivos y 1–3 reuniones.
+- D1 tentativo: escala vigesimal (0–20), práctica habitual en secundaria. Sigue pendiente confirmar cómo registra la IE, porque la norma vigente (RVM N.° 094-2020-MINEDU) establece la escala literal AD/A/B/C para la EBR.
+**Pendientes derivados:** verificar con la IE la escala del registro 2026 y del histórico 2024–2025 (deben coincidir o convertirse con un criterio justificado).
+
+---
+
 ### 2026-09-24 — Fase 1: plantillas de las 3 fichas
 **Tipo:** desarrollo
 **Qué se hizo:**
@@ -25,7 +34,7 @@
 - D3: periodo de corte = I bimestre / I trimestre (registrado en `VARIABLES.md` y `MODELO.md`).
 - La ficha 1 registra la nota de cada una de las 10 áreas curriculares; `n_notas` cuenta solo notas válidas, así un área exonerada queda vacía sin afectar el promedio.
 - `grupo` no se captura: se calcula del grado (3.° = control, 4.° = experimental).
-**Pendientes derivados:** confirmar con la IE la escala (D1) y si el corte es bimestre o trimestre; añadir en la metodología de la tesis el periodo de corte (observación #5).
+**Pendientes derivados:** confirmar con la IE la escala (D1); añadir en la metodología de la tesis el periodo de corte (observación #5).
 
 ---
 
@@ -74,7 +83,7 @@
 - En la posprueba, ¿qué variable se contrasta entre grupos: el nivel de riesgo, cada indicador o ambos?
 - ¿Se agrega Wilcoxon / t pareada para comparar pre vs post dentro de cada grupo?
 - Si la IE usa escala literal (AD, A, B, C), ¿qué conversión numérica es aceptable?
-- ¿Es adecuado medir el PRE (y el histórico) con datos hasta el cierre del I bimestre / trimestre para evitar fuga de información?
+- ¿Es adecuado medir el PRE (y el histórico) con datos hasta el cierre del I bimestre para evitar fuga de información?
 
 **Feedback recibido:** _(completar tras la presentación)_
 **Decisiones tomadas:** _(completar)_

@@ -34,7 +34,7 @@
 
 ### Fase 1 — Fichas y recolección PRE
 - [x] Diseñar las 3 fichas como plantillas (Excel/Sheets) con las columnas de `VARIABLES.md` → `fichas/` (verificadas en Excel)
-- [x] Definir el periodo de corte (D3: I bimestre / I trimestre)
+- [x] Definir el periodo de corte (D3: I bimestre; la IE trabaja por bimestres)
 - [ ] Confirmar con la IE la escala de calificación (vigesimal o literal)
 - [ ] Solicitar datos de los 70 alumnos (momento PRE)
 - [ ] Aplicar criterios de inclusión/exclusión y registrar cuántos se excluyeron y por qué

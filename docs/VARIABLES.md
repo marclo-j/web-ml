@@ -66,6 +66,6 @@ El cálculo en la ficha sirve para revisar al llenar; el valor oficial lo recalc
 ## ❓ Decisiones pendientes
 | # | Decisión | Opciones | Estado |
 |---|---|---|---|
-| D1 | Escala de calificación de la IE | a) Vigesimal 0–20 (usar tal cual) · b) Literal AD/A/B/C (normativa MINEDU para EBR, RVM N.° 094-2020-MINEDU) → convertir a numérico (ej. AD=4, A=3, B=2, C=1) y justificarlo en la tesis | ⬜ Confirmar con la IE (la ficha 1 ya soporta ambas escalas) |
+| D1 | Escala de calificación de la IE | a) Vigesimal 0–20 (usar tal cual) · b) Literal AD/A/B/C (normativa MINEDU para EBR, RVM N.° 094-2020-MINEDU) → convertir a numérico (ej. AD=4, A=3, B=2, C=1) y justificarlo en la tesis | 🟨 Tentativo: vigesimal (práctica habitual en secundaria según el autor). Confirmar cómo están los registros de la IE, incluido el histórico 2024–2025 (la ficha 1 soporta ambas) |
 | D2 | Qué es `nivel_riesgo_real` en 2026 | a) Clasificación del tutor/TOE · b) Deserción efectiva al cierre del periodo · c) Otra fuente institucional | ⬜ Consultar con asesor |
-| D3 | Periodo de corte de los indicadores | Datos acumulados hasta el cierre del **I bimestre / I trimestre**, igual para el PRE 2026 y el histórico 2024–2025 | ✅ Decidido 2026-09-24 (ver `MODELO.md` → fuga de información) |
+| D3 | Periodo de corte de los indicadores | Datos acumulados hasta el cierre del **I bimestre** (la IE trabaja por bimestres), igual para el PRE 2026 y el histórico 2024–2025 | ✅ Decidido 2026-09-24 (ver `MODELO.md` → fuga de información) |

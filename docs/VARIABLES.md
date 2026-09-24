@@ -50,8 +50,22 @@ EST-001,4,A,experimental,pre,142,10,85,95,2,4
 ```
 Dataset histórico: mismas columnas + `anio,deserto`.
 
+## Fichas → columnas
+Las 3 fichas están en `fichas/` (plantillas Excel generadas por `fichas/generar_fichas.py`). Se unen por `codigo` + `momento` + `anio`.
+
+| Ficha | Se captura | Se calcula en la ficha |
+|---|---|---|
+| 1 · Rendimiento académico | Nota de cada una de las 10 áreas curriculares de secundaria (`matematica`, `comunicacion`, `ingles`, `arte_cultura`, `ciencias_sociales`, `dpcc`, `educacion_fisica`, `educacion_religiosa`, `ciencia_tecnologia`, `ept`); vacío si no aplica (ej. exonerado) | `n_notas` (solo notas válidas), `suma_notas`, `promedio` |
+| 2 · Asistencia escolar | `dias_programados`, `dias_asistidos` | `pct_asistencia` |
+| 3 · Apoyo familiar | `reuniones_programadas`, `reuniones_asistidas` | `pct_reuniones` |
+
+Columnas comunes: `codigo`, `grado`, `seccion`, `grupo` (calculado: 3.° = control, 4.° = experimental), `momento`, `anio`, `deserto` (solo histórico), `excluido`, `motivo_exclusion`, `observaciones`.
+
+El cálculo en la ficha sirve para revisar al llenar; el valor oficial lo recalcula el backend / `ml/preprocess.py` a partir de los datos crudos.
+
 ## ❓ Decisiones pendientes
 | # | Decisión | Opciones | Estado |
 |---|---|---|---|
-| D1 | Escala de calificación de la IE | a) Vigesimal 0–20 (usar tal cual) · b) Literal AD/A/B/C (normativa MINEDU para EBR, RVM N.° 094-2020-MINEDU) → convertir a numérico (ej. AD=4, A=3, B=2, C=1) y justificarlo en la tesis | ⬜ Confirmar con la IE |
+| D1 | Escala de calificación de la IE | a) Vigesimal 0–20 (usar tal cual) · b) Literal AD/A/B/C (normativa MINEDU para EBR, RVM N.° 094-2020-MINEDU) → convertir a numérico (ej. AD=4, A=3, B=2, C=1) y justificarlo en la tesis | ⬜ Confirmar con la IE (la ficha 1 ya soporta ambas escalas) |
 | D2 | Qué es `nivel_riesgo_real` en 2026 | a) Clasificación del tutor/TOE · b) Deserción efectiva al cierre del periodo · c) Otra fuente institucional | ⬜ Consultar con asesor |
+| D3 | Periodo de corte de los indicadores | Datos acumulados hasta el cierre del **I bimestre / I trimestre**, igual para el PRE 2026 y el histórico 2024–2025 | ✅ Decidido 2026-09-24 (ver `MODELO.md` → fuga de información) |

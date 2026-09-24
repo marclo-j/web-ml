@@ -14,6 +14,21 @@
 
 ---
 
+### 2026-09-24 — Fase 1: plantillas de las 3 fichas
+**Tipo:** desarrollo
+**Qué se hizo:**
+- Se creó `fichas/generar_fichas.py`, que genera las 3 fichas en Excel (`fichas/ficha_1_rendimiento.xlsx`, `ficha_2_asistencia.xlsx`, `ficha_3_reuniones.xlsx`) con hoja de instrucciones, fórmulas de la tesis, validaciones de `VARIABLES.md`, alertas por color y hojas protegidas sin contraseña.
+- Se verificaron en Excel 16 con 38 casos de prueba (fórmulas, escala vigesimal y literal, notas fuera de rango, DA > DP, RT = 0, códigos no anonimizados, exclusión sin motivo): 0 fallas.
+- Se completó la estructura de carpetas de `ARQUITECTURA.md` (`backend/`, `frontend/`, `stats/`).
+- Se ajustó `ml/generate_synthetic.py` a las reglas de las fichas: periodo de corte (45–65 días, 2–4 reuniones), grupo derivado del grado y códigos `EST-###`. Tasa de deserción simulada regenerada: 35.0 %.
+**Decisiones tomadas:**
+- D3: periodo de corte = I bimestre / I trimestre (registrado en `VARIABLES.md` y `MODELO.md`).
+- La ficha 1 registra la nota de cada una de las 10 áreas curriculares; `n_notas` cuenta solo notas válidas, así un área exonerada queda vacía sin afectar el promedio.
+- `grupo` no se captura: se calcula del grado (3.° = control, 4.° = experimental).
+**Pendientes derivados:** confirmar con la IE la escala (D1) y si el corte es bimestre o trimestre; añadir en la metodología de la tesis el periodo de corte (observación #5).
+
+---
+
 ### 2026-09-24 — Datos sintéticos para simulación
 **Tipo:** desarrollo
 **Qué se hizo:** Se creó `ml/generate_synthetic.py` (semilla fija = 42) y se generaron `data/synthetic/historico.csv` (300 filas, tasa de deserción simulada 32.3 %, coherente con el 29–35 % real reportado) y `data/synthetic/carga_prueba.csv` (20 filas sin `deserto`, formato de carga masiva).
@@ -59,6 +74,7 @@
 - En la posprueba, ¿qué variable se contrasta entre grupos: el nivel de riesgo, cada indicador o ambos?
 - ¿Se agrega Wilcoxon / t pareada para comparar pre vs post dentro de cada grupo?
 - Si la IE usa escala literal (AD, A, B, C), ¿qué conversión numérica es aceptable?
+- ¿Es adecuado medir el PRE (y el histórico) con datos hasta el cierre del I bimestre / trimestre para evitar fuga de información?
 
 **Feedback recibido:** _(completar tras la presentación)_
 **Decisiones tomadas:** _(completar)_
@@ -82,3 +98,4 @@
 | 2 | No se define qué son los "valores reales registrados en la institución" contra los que se calculan las métricas | Metodología, análisis de datos | ⬜ |
 | 3 | Falta precisar la escala de calificación de la IE y su conversión si es literal | Metodología, ficha de rendimiento | ⬜ |
 | 4 | Falta indicar el origen de los datos etiquetados para entrenar el modelo | Metodología | ⬜ |
+| 5 | Falta definir el periodo que abarcan el PRE y el POST (periodo de corte, decisión D3) | Metodología, instrumentos | ⬜ |

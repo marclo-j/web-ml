@@ -27,11 +27,12 @@ flowchart LR
 
 ## Estructura del repositorio
 ```
-riesgo-desercion-web/
+web-ml/
 ├── CLAUDE.md
 ├── README.md
 ├── .gitignore
-├── docs/                  # esta documentación
+├── docs/                  # esta documentación (planes en docs/planes/)
+├── fichas/                # plantillas Excel vacías de las 3 fichas + generar_fichas.py
 ├── data/
 │   ├── raw/               # ❌ gitignored — exportes originales de la IE
 │   ├── processed/         # ❌ gitignored — CSV limpios y anonimizados

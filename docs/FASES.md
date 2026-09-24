@@ -7,7 +7,7 @@
 | Fase | Nombre | Estado | Depende de | Entregable principal |
 |---|---|---|---|---|
 | 0 | Setup y documentación | ✅ | — | Repo con estructura y `/docs` |
-| 1 | Fichas y recolección PRE | ⬜ | 0 | 3 fichas + datos PRE de los 70 alumnos |
+| 1 | Fichas y recolección PRE | 🟨 | 0 | 3 fichas + datos PRE de los 70 alumnos |
 | 2 | Dataset de entrenamiento (etiquetado) | ⬜ | 1 | CSV histórico con variable objetivo |
 | 3 | Entrenamiento y evaluación del modelo | ⬜ | 2 | `rf_v1.joblib` + métricas |
 | 4 | Backend (API) | ⬜ | 3 | FastAPI con predicción y CRUD |
@@ -33,7 +33,8 @@
 **Qué decir al presentar:** "Definí la arquitectura (frontend, backend, base de datos y modelo), el diccionario de datos que traduce mis 3 fichas a variables del sistema, y el plan de fases hasta Resultados."
 
 ### Fase 1 — Fichas y recolección PRE
-- [ ] Diseñar las 3 fichas como plantillas (Excel/Sheets) con las columnas de `VARIABLES.md`
+- [x] Diseñar las 3 fichas como plantillas (Excel/Sheets) con las columnas de `VARIABLES.md` → `fichas/` (verificadas en Excel)
+- [x] Definir el periodo de corte (D3: I bimestre / I trimestre)
 - [ ] Confirmar con la IE la escala de calificación (vigesimal o literal)
 - [ ] Solicitar datos de los 70 alumnos (momento PRE)
 - [ ] Aplicar criterios de inclusión/exclusión y registrar cuántos se excluyeron y por qué

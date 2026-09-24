@@ -1,0 +1,19 @@
+# Datos reales de estudiantes (Ley N.° 29733) — nunca se versionan
+data/raw/
+data/processed/
+
+# Entorno y secretos
+.env
+.env.local
+.venv/
+__pycache__/
+
+# Frontend
+node_modules/
+.next/
+
+# Salidas
+stats/output/
+
+# Temporales de Office
+~$*

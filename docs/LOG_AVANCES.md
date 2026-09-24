@@ -14,6 +14,34 @@
 
 ---
 
+### 2026-09-24 — Datos sintéticos para simulación
+**Tipo:** desarrollo
+**Qué se hizo:** Se creó `ml/generate_synthetic.py` (semilla fija = 42) y se generaron `data/synthetic/historico.csv` (300 filas, tasa de deserción simulada 32.3 %, coherente con el 29–35 % real reportado) y `data/synthetic/carga_prueba.csv` (20 filas sin `deserto`, formato de carga masiva).
+**Decisiones tomadas:**
+- Se simula el pipeline completo mientras se consigue el histórico real de la IE; el criterio de etiquetado (Opción B de `MODELO.md`) queda descartado por ahora — se prioriza obtener el desenlace histórico real (Opción A).
+- Los datos sintéticos nunca se citan como hallazgo; ver aviso en `data/synthetic/LEEME.md`.
+**Pendientes derivados:** Reemplazar `historico.csv` en cuanto la IE entregue el registro real 2024–2025 y volver a correr `ml/train.py`.
+
+---
+
+### 2026-09-24 — Cierre de Fase 0, handoff a Claude Code
+**Tipo:** desarrollo
+**Qué se hizo:** Se agregó `.gitignore` real (antes solo estaba mencionado en el README), `.gitkeep` en `ml/models/`, y se limpió el README para no duplicar contenido. Fase 0 marcada como ✅ en `FASES.md`.
+**Decisiones tomadas:** De aquí en adelante, el desarrollo continúa en Claude Code sobre este repositorio; `CLAUDE.md` en la raíz es el punto de entrada.
+**Pendientes derivados:** Cerrar las decisiones ❓ de `VARIABLES.md` (escala de notas) y `MODELO.md` (origen de `nivel_riesgo_real`) en cuanto haya respuesta de la IE/asesor.
+
+---
+
+### 2026-09-24 — Repositorio en GitHub y plan de fichas
+**Tipo:** desarrollo
+**Qué se hizo:** Se subió el repositorio a GitHub (`marclo-j/web-ml`) y se guardó el plan de trabajo en `docs/planes/2026-09-24_fase0-y-fichas.md`.
+**Decisiones tomadas:**
+- Ficha de rendimiento con nota por curso; la plantilla calcula `suma_notas`, `n_notas` y `promedio` (soporta escala vigesimal o literal).
+- Periodo de corte: I bimestre / trimestre, igual para PRE 2026 e histórico 2024–2025, para evitar fuga de información (un desertor tiene menos asistencia porque ya se fue).
+**Pendientes derivados:** generar las fichas y registrar D3 (periodo de corte) en `VARIABLES.md`; ajustar `ml/generate_synthetic.py` a ese periodo (hoy simula 180–200 días programados, año completo).
+
+---
+
 ### 2026-09-26 — Hito 1: presentación de avance
 **Tipo:** presentación
 **Guion sugerido (slides):**
@@ -35,16 +63,6 @@
 **Feedback recibido:** _(completar tras la presentación)_
 **Decisiones tomadas:** _(completar)_
 **Pendientes derivados:** _(completar)_
-
----
-
-### 2026-09-24 — Repositorio en GitHub y plan de Fase 0 + fichas
-**Tipo:** desarrollo
-**Qué se hizo:** Se inicializó el repositorio git, se añadió `.gitignore` (datos reales fuera) y se subió a GitHub (`marclo-j/web-ml`). Se guardó el plan de trabajo en `docs/planes/2026-09-24_fase0-y-fichas.md`.
-**Decisiones tomadas:**
-- Ficha de rendimiento con nota por curso; la plantilla calcula `suma_notas`, `n_notas` y `promedio` (soporta escala vigesimal o literal).
-- Periodo de corte: I bimestre / trimestre, igual para PRE 2026 e histórico 2024–2025, para evitar fuga de información (un desertor tiene menos asistencia porque ya se fue).
-**Pendientes derivados:** ejecutar el plan (estructura de carpetas + fichas) y registrar D3 en `VARIABLES.md`.
 
 ---
 

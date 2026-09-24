@@ -49,19 +49,6 @@ npm install
 npm run dev                      # http://localhost:3000
 ```
 
-## .gitignore mínimo
-```gitignore
-data/raw/
-data/processed/
-.env
-.env.local
-.venv/
-__pycache__/
-node_modules/
-.next/
-stats/output/
-```
-
 ## Documentación
 Todo en [`/docs`](docs/). Empezar por [`FASES.md`](docs/FASES.md) y [`CONTEXTO.md`](docs/CONTEXTO.md).
 

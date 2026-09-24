@@ -6,7 +6,7 @@
 ## Resumen
 | Fase | Nombre | Estado | Depende de | Entregable principal |
 |---|---|---|---|---|
-| 0 | Setup y documentación | 🟨 | — | Repo con estructura y `/docs` |
+| 0 | Setup y documentación | ✅ | — | Repo con estructura y `/docs` |
 | 1 | Fichas y recolección PRE | ⬜ | 0 | 3 fichas + datos PRE de los 70 alumnos |
 | 2 | Dataset de entrenamiento (etiquetado) | ⬜ | 1 | CSV histórico con variable objetivo |
 | 3 | Entrenamiento y evaluación del modelo | ⬜ | 2 | `rf_v1.joblib` + métricas |
@@ -21,11 +21,14 @@
 
 ## Detalle por fase
 
-### Fase 0 — Setup y documentación
+### Fase 0 — Setup y documentación ✅
 - [x] Definir documentos del repo
-- [ ] Crear repo y estructura de carpetas (`ARQUITECTURA.md`)
-- [ ] Configurar `.gitignore` (datos reales fuera)
-- [ ] Cerrar decisiones pendientes marcadas con ❓ en `VARIABLES.md` y `MODELO.md`
+- [x] Crear repo y estructura de carpetas (`ARQUITECTURA.md`)
+- [x] Configurar `.gitignore` (datos reales fuera)
+- [ ] Cerrar decisiones pendientes marcadas con ❓ en `VARIABLES.md` y `MODELO.md` — sigue abierto, depende de la IE y del asesor
+
+### Preparación de Fase 3 (adelantada)
+- [x] `ml/generate_synthetic.py` + `data/synthetic/historico.csv` y `carga_prueba.csv`, para no bloquear el desarrollo mientras llega el histórico real (ver `LOG_AVANCES.md`)
 
 **Qué decir al presentar:** "Definí la arquitectura (frontend, backend, base de datos y modelo), el diccionario de datos que traduce mis 3 fichas a variables del sistema, y el plan de fases hasta Resultados."
 

@@ -13,3 +13,6 @@ Generados por `ml/generate_synthetic.py` (semilla fija = 42, reproducible).
 - Las slides de sustentación, salvo etiquetado explícito como "prueba de concepto / datos simulados"
 
 En cuanto llegue el histórico real de la IE, este archivo se reemplaza y `ml/train.py` se corre de nuevo apuntando a `data/processed/historico.csv`.
+
+## `fichas_ejemplo/`
+Las 3 fichas del PRE 2026 llenas por completo con datos **inventados** (`*_EJEMPLO.xlsx`), solo para aprender a llenarlas. Cada fila lleva `EJEMPLO` en `observaciones`: `ml/preprocess.py` se niega a procesarlas salvo con `--permitir-ejemplo`. Las fichas reales se llenan en `data/raw/2026_pre/`, nunca copiando valores de aquí.

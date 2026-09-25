@@ -110,13 +110,16 @@ class Prellenado:
     alumnos: list[tuple[str, int]]  # (codigo, grado)
 
     @classmethod
-    def desde_lote(cls, lote: str, por_grado: int = POR_GRADO) -> "Prellenado":
+    def desde_lote(cls, lote: str, por_grado: dict[int, int]) -> "Prellenado":
+        """por_grado: cuántos alumnos hay de cada grado, ej. {4: 35, 3: 35}.
+        El histórico no tiene por qué tener el mismo número que la muestra
+        de la tesis (2026) ni el mismo número entre 4.° y 3.°."""
         coincide = re.fullmatch(r"(2024|2025|2026)_(pre|post)", lote)
         if not coincide:
             raise SystemExit(f"Lote {lote!r} no válido: use AAAA_pre o AAAA_post")
         alumnos = []
         for grado in ORDEN_GRADOS:
-            for _ in range(por_grado):
+            for _ in range(por_grado.get(grado, POR_GRADO)):
                 alumnos.append((f"EST-{len(alumnos) + 1:03d}", grado))
         return cls(int(coincide[1]), coincide[2], alumnos)
 
@@ -702,6 +705,11 @@ def construir(ficha: Ficha, filas: int, datos: Prellenado | None = None) -> Work
 
 
 def main() -> None:
+    import sys
+
+    for flujo in (sys.stdout, sys.stderr):
+        flujo.reconfigure(encoding="utf-8", errors="replace")
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--filas", type=int, default=150, help="Filas de captura por ficha vacía"
@@ -718,14 +726,33 @@ def main() -> None:
         help="Genera fichas listas para rellenar, ej. 2026_pre o 2026_post",
     )
     parser.add_argument(
-        "--por-grado", type=int, default=POR_GRADO, help="Estudiantes por grado"
+        "--por-grado",
+        type=int,
+        default=POR_GRADO,
+        help="Estudiantes por grado si son iguales en 4.° y 3.° (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--por-grado-4",
+        type=int,
+        default=None,
+        help="Alumnos de 4.° (anula --por-grado)",
+    )
+    parser.add_argument(
+        "--por-grado-3",
+        type=int,
+        default=None,
+        help="Alumnos de 3.° (anula --por-grado)",
     )
     args = parser.parse_args()
 
     raiz = Path(__file__).resolve().parent.parent
     datos = None
     if args.prellenar:
-        datos = Prellenado.desde_lote(args.prellenar, args.por_grado)
+        conteo = {
+            4: args.por_grado_4 if args.por_grado_4 is not None else args.por_grado,
+            3: args.por_grado_3 if args.por_grado_3 is not None else args.por_grado,
+        }
+        datos = Prellenado.desde_lote(args.prellenar, conteo)
         salida = args.out or raiz / "data" / "raw" / args.prellenar
     else:
         salida = args.out or Path(__file__).resolve().parent

@@ -6,6 +6,7 @@ Generados por `ml/generate_synthetic.py` (semilla fija = 42, reproducible).
 |---|---|---|
 | `historico.csv` | Entrenar el modelo mientras no llega el histórico real 2024–2025 | Sí |
 | `carga_prueba.csv` | Probar `POST /registros/importar` y el dashboard con datos "2026" | No |
+| `historico_indicadores.csv` | `historico.csv` + promedio/pct_asistencia/pct_reuniones ya calculados (`ml/calcular_indicadores.py`), listo para `ml/train.py` | Sí |
 
 **No usar en:**
 - El capítulo de Resultados

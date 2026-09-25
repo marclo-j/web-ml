@@ -8,8 +8,8 @@
 |---|---|---|---|---|
 | 0 | Setup y documentación | ✅ | — | Repo con estructura y `/docs` |
 | 1 | Fichas y recolección PRE | ✅ | 0 | 3 fichas + datos PRE de los 70 alumnos |
-| 2 | Dataset de entrenamiento (etiquetado) | ⬜ | 1 | CSV histórico con variable objetivo |
-| 3 | Entrenamiento y evaluación del modelo | ⬜ | 2 | `rf_v1.joblib` + métricas |
+| 2 | Dataset de entrenamiento (etiquetado) | ⛔ | 1 | CSV histórico con variable objetivo — IE se negó a entregarlo |
+| 3 | Entrenamiento y evaluación del modelo | 🟨 | 2 | `rf_v1.joblib` + métricas — pipeline listo, corridas de prueba hechas, falta el histórico real |
 | 4 | Backend (API) | ⬜ | 3 | FastAPI con predicción y CRUD |
 | 5 | Frontend (dashboard) | ⬜ | 4 | Web con listado de riesgo por alumno |
 | 6 | Despliegue e intervención | ⬜ | 5 | Web en producción, usada con grupo experimental |
@@ -44,17 +44,19 @@
 **Qué decir:** "Las fichas aplican exactamente las fórmulas de mi metodología; aquí está la estructura y el estado de recolección."
 
 ### Fase 2 — Dataset de entrenamiento
-- [ ] Solicitar a la IE registros de 2024–2025 con desenlace conocido (desertó sí/no)
-- [ ] Limpiar, anonimizar y consolidar en `data/processed/historico.csv`
+- [x] Solicitar a la IE registros de 2024–2025 con desenlace conocido → **se negó** (2026-09-25); se sigue insistiendo en paralelo
+- [ ] Limpiar, anonimizar y consolidar en `data/processed/historico.csv` (bloqueado hasta conseguir el histórico real)
 - [ ] Documentar tamaño, balance de clases y exclusiones en `MODELO.md`
+- [x] Mientras tanto: `ml/etiquetar_umbral.py` etiqueta por Opción B (umbral) sobre los datos PRE 2026 reales, declarado como limitación
 
-**Qué decir:** "El modelo es supervisado: aprende de alumnos de años anteriores cuyo desenlace ya se conoce."
+**Qué decir:** "El modelo es supervisado: aprende de alumnos de años anteriores cuyo desenlace ya se conoce. La IE aún no me entrega ese histórico, así que valido el pipeline con dos fuentes que declaro explícitamente como no-resultado: datos sintéticos y un etiquetado por umbrales de la literatura."
 
 ### Fase 3 — Modelo
-- [ ] Script `ml/train.py` con validación cruzada estratificada
-- [ ] Métricas: accuracy, precision, recall, F1 + matriz de confusión
-- [ ] Importancia de variables (sustenta OE1–OE3)
-- [ ] Guardar modelo versionado y registrar en `MODELO.md`
+- [x] Script `ml/train.py` con validación cruzada estratificada k=5 + holdout 80/20
+- [x] Métricas: accuracy, precision, recall, F1 + matriz de confusión
+- [x] Importancia de variables (MDI y permutación; sustenta OE1–OE3)
+- [ ] Guardar modelo versionado **con el histórico real** y registrar en `MODELO.md` (bloqueado por Fase 2)
+- [x] Corridas de prueba: `rf_v0` (sintético) y `rf_v0b` (Opción B, real PRE 2026) — ver `MODELO.md`, ninguna es resultado de tesis
 
 **Qué decir:** "Estas son las métricas del modelo y el peso de cada dimensión en la predicción."
 

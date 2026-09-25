@@ -14,6 +14,21 @@
 
 ---
 
+### 2026-09-25 — Pipeline de entrenamiento y Opción B sobre datos reales
+**Tipo:** desarrollo
+**Qué se hizo:**
+- La IE se negó a entregar el histórico 2024–2025. Se evaluó usar un dataset de Kaggle como sustituto y se descartó: ninguno de los 3 candidatos revisados (Secondary School Student Dropout, Student Performance and Attendance Dataset, UCI Predict Students' Dropout) tiene las 3 variables de la tesis (promedio, pct_asistencia, pct_reuniones); el de UCI además es de educación superior en Portugal, no secundaria en Perú.
+- Se activó la Opción B (`MODELO.md`) sobre los datos PRE 2026 **reales** (no sintéticos): `ml/etiquetar_umbral.py` etiqueta `deserto` por 3 reglas de umbral con fuente citada (nota < 11: MINEDU; asistencia < 85 %: absentismo crónico, Balfanz y Byrnes / Attendance Works; reuniones < 50 %: umbral propio del autor, declarado como tal).
+- Se creó `ml/train.py` (Random Forest, holdout 80/20 + CV k=5, métricas, importancia MDI y por permutación) y `ml/calcular_indicadores.py` (aplica las fórmulas a un CSV de datos crudos, reutilizable para un histórico real que llegue en CSV).
+- Se corrieron 2 versiones de prueba, ninguna citable como resultado: `rf_v0` (sintético, accuracy 0.42, cercano al azar por el ruido del generador) y `rf_v0b` (Opción B sobre los 69 reales, accuracy 1.0 — confirma empíricamente que el modelo solo reproduce la regla de etiquetado).
+- 34 pruebas automáticas nuevas en `ml/tests/`.
+**Decisiones tomadas:**
+- No usar datasets externos (Kaggle) como reemplazo del histórico: rompen la operacionalización de la tesis (variables distintas a las definidas en `VARIABLES.md`).
+- Los modelos entrenados con datos reales no se versionan (`ml/models/*.joblib|json` a `.gitignore`): con n=69 el árbol puede memorizar alumnos individuales.
+**Pendientes derivados:** conseguir el histórico real (Opción A); validar con el asesor el umbral de `pct_reuniones` (no viene de una cifra publicada); confirmar los números de cita [40]/[41] contra la bibliografía completa de la tesis antes de usarlos en el documento.
+
+---
+
 ### 2026-09-25 — Fase 1 completa: datos PRE 2026 recolectados y procesados
 **Tipo:** desarrollo
 **Qué se hizo:**

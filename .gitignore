@@ -2,6 +2,14 @@
 data/raw/
 data/processed/
 
+# Modelos entrenados: con pocos casos reales (ej. n=69) el árbol puede
+# memorizar alumnos individuales. Solo se versiona un modelo cuando se
+# entrena con fuente=historico_real Y el asesor aprueba subirlo; mientras
+# tanto se regeneran localmente con ml/train.py y sus métricas se copian
+# a mano a docs/MODELO.md.
+ml/models/*.joblib
+ml/models/*.json
+
 # Entorno y secretos
 .env
 .env.local

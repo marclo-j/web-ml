@@ -249,6 +249,15 @@ def test_historico_requiere_deserto(lote):
     )
 
 
+def test_filas_de_ejemplo_bloquean_el_lote(lote):
+    marca = {"observaciones": "EJEMPLO: dato inventado, reemplazar"}
+    carpeta = lote([notas(**marca)], [asistencia()], [reuniones()])
+    with pytest.raises(ErrorValidacion, match="EJEMPLO"):
+        consolidar(carpeta)
+    incluidos, _, resumen = consolidar(carpeta, permitir_ejemplo=True)
+    assert len(incluidos) == 1 and resumen["datos_de_ejemplo"]
+
+
 def test_deserto_vacio_en_2026(lote):
     carpeta = lote([notas(deserto=0)], [asistencia()], [reuniones()])
     _, excluidos, _ = consolidar(carpeta)

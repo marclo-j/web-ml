@@ -51,6 +51,9 @@ AREAS = [
 # Escala vigesimal confirmada por la IE (decisión D1)
 NOTA_MIN, NOTA_MAX = 0, 20
 
+# Marca de las filas de ejemplo (datos inventados para aprender a llenar)
+MARCA_EJEMPLO = "EJEMPLO"
+
 # Columnas que --prellenar ya escribe; una fila con solo esto es un código sin usar
 IDENTIFICACION = {"codigo", "grado", "momento", "anio"}
 
@@ -156,6 +159,7 @@ class Fila:
     deserto: int | None
     excluido_motivo: str | None = None
     solo_identificacion: bool = False
+    ejemplo: bool = False  # observaciones con la marca MARCA_EJEMPLO
     datos: dict = field(default_factory=dict)
     faltantes: list[str] = field(default_factory=list)
     errores: list[str] = field(default_factory=list)
@@ -207,6 +211,7 @@ def leer_ficha(ruta: Path, ficha: int) -> tuple[list[Fila], dict]:
         fila.solo_identificacion = all(
             vacio(registro[c]) for c in captura if c not in IDENTIFICACION
         )
+        fila.ejemplo = MARCA_EJEMPLO in str(registro.get("observaciones") or "").upper()
         filas.append(fila)
     return filas, meta
 
@@ -336,8 +341,14 @@ def leer_notas(registro, errores, faltantes) -> dict:
 # --- Consolidación -----------------------------------------------------------
 
 
-def consolidar(carpeta: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
-    """Une las 3 fichas por codigo + anio + momento y aplica las exclusiones."""
+def consolidar(
+    carpeta: Path, permitir_ejemplo: bool = False
+) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
+    """Une las 3 fichas por codigo + anio + momento y aplica las exclusiones.
+
+    Si alguna fila está marcada como EJEMPLO se detiene, para que un dato
+    inventado nunca llegue a Resultados (salvo permitir_ejemplo, para demos).
+    """
     filas: dict[int, list[Fila]] = {}
     archivos = {}
     for ficha, (patron, _) in FICHAS.items():
@@ -349,6 +360,14 @@ def consolidar(carpeta: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
         for ruta in rutas:
             leidas, _ = leer_ficha(ruta, ficha)
             filas[ficha].extend(leidas)
+
+    ejemplos = [f.referencia for lista in filas.values() for f in lista if f.ejemplo]
+    if ejemplos and not permitir_ejemplo:
+        raise ErrorValidacion(
+            f"{len(ejemplos)} filas siguen marcadas como {MARCA_EJEMPLO} en "
+            f"observaciones (ej. {ejemplos[0]}). Reemplace los datos inventados "
+            "y borre la marca antes de procesar."
+        )
 
     # Agrupar por estudiante; las filas sin clave válida se excluyen aparte
     por_clave: dict[tuple, dict[int, list[Fila]]] = {}
@@ -392,6 +411,7 @@ def consolidar(carpeta: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
     ).sort_values(["motivo", "codigo"])
 
     resumen = {
+        "datos_de_ejemplo": bool(ejemplos),
         "archivos": archivos,
         "registros": len(por_clave) - len(sin_usar),
         "codigos_sin_usar": sin_usar,
@@ -510,13 +530,18 @@ def main() -> None:
         "--entrada", type=Path, required=True, help="Carpeta con las 3 fichas"
     )
     parser.add_argument("--salida", type=Path, required=True, help="CSV de incluidos")
+    parser.add_argument(
+        "--permitir-ejemplo",
+        action="store_true",
+        help="Solo para demostraciones: procesa aunque haya filas EJEMPLO",
+    )
     args = parser.parse_args()
 
     for flujo in (sys.stdout, sys.stderr):
         flujo.reconfigure(encoding="utf-8", errors="replace")
     comprobar_salida(args.salida)
     try:
-        incluidos, excluidos, resumen = consolidar(args.entrada)
+        incluidos, excluidos, resumen = consolidar(args.entrada, args.permitir_ejemplo)
     except (FileNotFoundError, ErrorValidacion) as error:
         raise SystemExit(f"[ERROR] {error}") from error
 
@@ -529,6 +554,8 @@ def main() -> None:
         json.dumps(resumen, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
+    if resumen["datos_de_ejemplo"]:
+        print("[AVISO] Lote con datos de EJEMPLO: no usar en Resultados.")
     print(f"Registros con datos: {resumen['registros']}")
     if resumen["codigos_sin_usar"]:
         sin_usar = resumen["codigos_sin_usar"]

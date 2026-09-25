@@ -14,6 +14,16 @@
 
 ---
 
+### 2026-09-25 — Fase 1 completa: datos PRE 2026 recolectados y procesados
+**Tipo:** desarrollo
+**Qué se hizo:**
+- Se llenaron las 3 fichas del PRE 2026 con los datos reales de la IE en `data/raw/2026_pre/` (no versionado) y se procesaron con `ml/preprocess.py`.
+- Resultado: 69 estudiantes incluidos (35 control, 34 experimental) y 1 excluido por traslado definitivo. Sin excluidos por dimensión incompleta ni por registro inconsistente. Salida en `data/processed/2026_pre.csv` (+ `_excluidos.csv` y `_resumen.json`), no versionada.
+**Decisiones tomadas:** Fase 1 se da por cerrada (✅ en `FASES.md`); se sigue con la Fase 2 (dataset de entrenamiento histórico).
+**Pendientes derivados:** conseguir los registros históricos 2024–2025 con desenlace conocido (`deserto`) — ver observación pendiente sobre la negativa de la IE a entregarlos.
+
+---
+
 ### 2026-09-25 — Escala vigesimal confirmada y fichas listas para rellenar
 **Tipo:** desarrollo
 **Qué se hizo:**

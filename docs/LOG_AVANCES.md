@@ -14,6 +14,20 @@
 
 ---
 
+### 2026-09-24 — Fase 1: consolidación de fichas y criterios de exclusión
+**Tipo:** desarrollo
+**Qué se hizo:**
+- Se creó `ml/preprocess.py`: une las 3 fichas llenas, recalcula los indicadores a partir de los datos crudos (`calcular_indicadores`, función que reutilizará el backend), aplica las reglas de `VARIABLES.md` y clasifica cada excluido en traslado definitivo / dimensión incompleta / registro inconsistente, con la fila de Excel de origen.
+- 16 pruebas automáticas en `ml/tests/` (fórmulas, reglas, cada criterio de exclusión, escala literal, histórico con `deserto`).
+- Prueba de punta a punta con 20 alumnos **sintéticos** guardados en Excel real: 17 incluidos y 3 excluidos, uno por motivo (validación técnica, no es resultado).
+**Decisiones tomadas:**
+- Una nota fuera de la escala excluye al alumno por registro inconsistente (no se descarta en silencio la nota).
+- Prioridad del motivo cuando hay varios: traslado marcado → alumno repetido → dimensión incompleta o dato inválido → incoherencia entre fichas → reglas de las fórmulas.
+- La salida con datos reales solo puede escribirse en `data/processed/` (el script lo impide en otra ruta del repo).
+**Pendientes derivados:** correr `preprocess.py` cuando la IE entregue los datos PRE y reportar los excluidos en Resultados.
+
+---
+
 ### 2026-09-24 — Escala de calificación y corte bimestral
 **Tipo:** desarrollo
 **Decisiones tomadas:**

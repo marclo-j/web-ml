@@ -63,6 +63,20 @@ Columnas comunes: `codigo`, `grado`, `seccion`, `grupo` (calculado: 3.° = contr
 
 El cálculo en la ficha sirve para revisar al llenar; el valor oficial lo recalcula el backend / `ml/preprocess.py` a partir de los datos crudos.
 
+## Consolidación y exclusiones (`ml/preprocess.py`)
+Une las 3 fichas de un lote por `codigo` + `anio` + `momento`, aplica las reglas de validación y clasifica cada exclusión en uno de los 3 criterios de la tesis:
+
+| Motivo | Cuándo |
+|---|---|
+| `traslado definitivo` | Marcado en cualquiera de las fichas (`excluido = sí`) |
+| `dimensión incompleta` | Falta el alumno en alguna ficha, falta un dato obligatorio, no tiene ninguna nota o, en el histórico, falta `deserto` |
+| `registro inconsistente` | Nota fuera de la escala, DA > DP, RA > RT, código que no es `EST-###`, grado o sección distintos entre fichas, alumno repetido, `deserto` lleno en 2026 |
+
+```bash
+ml/.venv/Scripts/python ml/preprocess.py --entrada data/raw/2026_pre --salida data/processed/2026_pre.csv
+```
+Genera `2026_pre.csv` (incluidos con indicadores), `2026_pre_excluidos.csv` (motivo, detalle y fila de Excel de cada excluido) y `2026_pre_resumen.json` (conteos por motivo y grupo, para Resultados). Se niega a escribir fuera de `data/processed/`. Un lote debe usar una sola escala de calificación.
+
 ## ❓ Decisiones pendientes
 | # | Decisión | Opciones | Estado |
 |---|---|---|---|

@@ -37,7 +37,8 @@
 - [x] Definir el periodo de corte (D3: I bimestre; la IE trabaja por bimestres)
 - [ ] Confirmar con la IE la escala de calificación (vigesimal o literal)
 - [ ] Solicitar datos de los 70 alumnos (momento PRE)
-- [ ] Aplicar criterios de inclusión/exclusión y registrar cuántos se excluyeron y por qué
+- [x] Herramienta de consolidación y exclusión lista: `ml/preprocess.py` (16 pruebas en `ml/tests/`)
+- [ ] Aplicar criterios de inclusión/exclusión a los datos reales y registrar cuántos se excluyeron y por qué
 
 **Qué decir:** "Las fichas aplican exactamente las fórmulas de mi metodología; aquí está la estructura y el estado de recolección."
 

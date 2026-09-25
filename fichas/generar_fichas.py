@@ -12,15 +12,20 @@ Los nombres de columna coinciden con el CSV de carga masiva de
 docs/VARIABLES.md. Las plantillas no contienen datos: una ficha llena es un
 dato real y se guarda en data/raw/ (gitignored), nunca en esta carpeta.
 
+Con --prellenar genera además un juego listo para rellenar en data/raw/<lote>/:
+70 filas con código, grado, momento y año ya escritos (EST-001..035 = 4.°,
+EST-036..070 = 3.°). Nunca sobrescribe fichas existentes.
+
 Uso (desde la raíz del repo, con el entorno de ml/):
-    python fichas/generar_fichas.py
-    python fichas/generar_fichas.py --filas 200 --out fichas
+    python fichas/generar_fichas.py                       # plantillas vacías
+    python fichas/generar_fichas.py --prellenar 2026_pre  # listas para rellenar
 """
 
 import argparse
-import os
+import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from openpyxl import Workbook
 from openpyxl.formatting.rule import FormulaRule
@@ -31,16 +36,15 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 # Distribución de la hoja "Datos"
 FILA_TITULO = 1
-FILA_ESCALA = 7  # solo ficha 1
 FILA_ENCABEZADO = 9
 FILA_INICIO = 10
-CELDA_ESCALA = f"$B${FILA_ESCALA}"
 
 # Decisión D3 (docs/VARIABLES.md)
 PERIODO_CORTE = "I bimestre"
 
 AZUL = "1F4E78"
 GRIS = "E7E6E6"
+CELESTE = "DDEBF7"  # dato ya pre-llenado
 AMBAR = "FFE699"
 ROJO = "F4B6B6"
 BORDE = Border(*(Side(style="thin", color="BFBFBF"),) * 4)
@@ -59,16 +63,13 @@ AREAS = [
     ("ept", "Educación para el Trabajo"),
 ]
 
-# Conversión provisional de escala literal (decisión D1, docs/VARIABLES.md)
-CONVERSION_LITERAL = [
-    ("AD", 4, "Logro destacado"),
-    ("A", 3, "Logro esperado"),
-    ("B", 2, "En proceso"),
-    ("C", 1, "En inicio"),
-]
-HOJA_CONVERSION = "Conversión"
-RANGO_CODIGOS = f"'{HOJA_CONVERSION}'!$A$5:$A$8"
-RANGO_VALORES = f"'{HOJA_CONVERSION}'!$B$5:$B$8"
+# Escala vigesimal 0-20 confirmada por la IE (decisión D1)
+NOTA_MIN, NOTA_MAX = 0, 20
+VALIDA_NOTA = f"AND(ISNUMBER({{c}}),{{c}}>={NOTA_MIN},{{c}}<={NOTA_MAX})"
+
+# Muestra de la tesis: 35 estudiantes por grado; 4.° = experimental, 3.° = control
+POR_GRADO = 35
+ORDEN_GRADOS = (4, 3)
 
 MOTIVOS_EXCLUSION = "traslado definitivo,dimensión incompleta,registro inconsistente"
 
@@ -98,7 +99,26 @@ class Ficha:
     notas: list[str] = field(default_factory=list)
     # Formato condicional extra: (columna, plantilla de fórmula, color)
     alertas: list[tuple[str, str, str]] = field(default_factory=list)
-    con_escala: bool = False
+
+
+@dataclass
+class Prellenado:
+    """Datos de identificación que ya vienen escritos en un lote."""
+
+    anio: int
+    momento: str
+    alumnos: list[tuple[str, int]]  # (codigo, grado)
+
+    @classmethod
+    def desde_lote(cls, lote: str, por_grado: int = POR_GRADO) -> "Prellenado":
+        coincide = re.fullmatch(r"(2024|2025|2026)_(pre|post)", lote)
+        if not coincide:
+            raise SystemExit(f"Lote {lote!r} no válido: use AAAA_pre o AAAA_post")
+        alumnos = []
+        for grado in ORDEN_GRADOS:
+            for _ in range(por_grado):
+                alumnos.append((f"EST-{len(alumnos) + 1:03d}", grado))
+        return cls(int(coincide[1]), coincide[2], alumnos)
 
 
 # --- Validaciones -----------------------------------------------------------
@@ -229,16 +249,17 @@ def ficha_rendimiento() -> Ficha:
     notas = [
         Columna(
             nombre,
-            f"Calificación del periodo en {etiqueta}. Vacío si no aplica "
-            "(ej. exonerado).",
+            f"Nota final del I bimestre en {etiqueta} (0 a 20). Vacío si no "
+            "aplica (ej. exonerado).",
             ancho=11,
-            validacion=dv_formula(
-                f'IF({CELDA_ESCALA}="literal",'
-                'OR({c}="AD",{c}="A",{c}="B",{c}="C"),'
-                "AND(ISNUMBER({c}),{c}>=0,{c}<=20))",
-                "Vigesimal: número de 0 a 20. Literal: AD, A, B o C.",
+            validacion=lambda _: _dv(
+                "decimal",
+                "La nota debe ser un número de 0 a 20.",
+                operator="between",
+                formula1=str(NOTA_MIN),
+                formula2=str(NOTA_MAX),
             ),
-            regla="0–20 (vigesimal) o AD/A/B/C (literal)",
+            regla="0 a 20",
         )
         for nombre, etiqueta in AREAS
     ]
@@ -248,11 +269,7 @@ def ficha_rendimiento() -> Ficha:
         return f"{c[primera]}{r}:{c[ultima]}{r}"
 
     def conteo(r: int, c: dict) -> str:
-        return (
-            f'IF({CELDA_ESCALA}="literal",'
-            f"SUMPRODUCT(COUNTIF({rango(r, c)},{RANGO_CODIGOS})),"
-            f'COUNTIFS({rango(r, c)},">=0",{rango(r, c)},"<=20"))'
-        )
+        return f'COUNTIFS({rango(r, c)},">={NOTA_MIN}",{rango(r, c)},"<={NOTA_MAX}")'
 
     calculadas = [
         Columna(
@@ -264,12 +281,11 @@ def ficha_rendimiento() -> Ficha:
         ),
         Columna(
             "suma_notas",
-            "Σ Notas. En escala literal suma los valores de la hoja Conversión.",
+            "Σ Notas.",
             ancho=11,
             formula=lambda r, c: (
-                f'=IF({c["n_notas"]}{r}="","",IF({CELDA_ESCALA}="literal",'
-                f"SUMPRODUCT(COUNTIF({rango(r, c)},{RANGO_CODIGOS})*{RANGO_VALORES}),"
-                f'SUMIFS({rango(r, c)},{rango(r, c)},">=0",{rango(r, c)},"<=20")))'
+                f'=IF({c["n_notas"]}{r}="","",SUMIFS({rango(r, c)},{rango(r, c)},'
+                f'">={NOTA_MIN}",{rango(r, c)},"<={NOTA_MAX}"))'
             ),
             regla="Σ Notas",
         ),
@@ -287,11 +303,7 @@ def ficha_rendimiento() -> Ficha:
     alertas = [
         (
             nombre,
-            (
-                f'AND({{c}}<>"",NOT(IF({CELDA_ESCALA}="literal",'
-                'OR({c}="AD",{c}="A",{c}="B",{c}="C"),'
-                "AND(ISNUMBER({c}),{c}>=0,{c}<=20))))"
-            ),
+            f'AND({{c}}<>"",NOT({VALIDA_NOTA}))',
             ROJO,
         )
         for nombre, _ in AREAS
@@ -311,16 +323,11 @@ def ficha_rendimiento() -> Ficha:
                 "las notas registradas."
             ),
             (
-                "Elija la escala en la celda B7. Con escala literal, AD/A/B/C se "
-                "convierten según la hoja Conversión (provisional, decisión D1)."
-            ),
-            (
-                "Una nota no válida para la escala elegida se marca en rojo y no se "
-                "cuenta en el promedio."
+                "Escala vigesimal (0 a 20), la que usa la IE. Se admiten decimales. "
+                "Una nota fuera de 0-20 se marca en rojo y no se cuenta."
             ),
         ],
         alertas=alertas,
-        con_escala=True,
     )
 
 
@@ -451,6 +458,16 @@ ESTILO_ENCABEZADO = Font(bold=True, color="FFFFFF")
 RELLENO_ENCABEZADO = PatternFill("solid", fgColor=AZUL)
 RELLENO_CALCULADA = PatternFill("solid", fgColor=GRIS)
 LIBRE = Protection(locked=False)
+BLOQUEADA = Protection(locked=True)
+
+NOTA_PRELLENADO = (
+    "Ficha lista para rellenar: código, grado, momento y año ya vienen escritos "
+    "(celeste, bloqueados). Solo complete las celdas en blanco. Las celdas en ámbar "
+    "son las que faltan; al llenarlas se vuelven blancas. EST-001 a EST-035 son de "
+    "4.° y EST-036 a EST-070 de 3.°: anote en su lista de clase, fuera de este "
+    "archivo, qué alumno corresponde a cada código y use el mismo código en las 3 "
+    "fichas y en el PRE y el POST."
+)
 
 
 def relleno_alerta(color: str) -> PatternFill:
@@ -470,10 +487,6 @@ def escribir_metadatos(ws: Worksheet, ficha: Ficha) -> None:
         ("Fecha de fin del periodo", None),
         ("Responsable del llenado (cargo)", None),
     ]
-    if ficha.con_escala:
-        campos.append(
-            ("Escala de calificación", dv_lista("vigesimal,literal", "Elija una."))
-        )
     for i, (etiqueta, validacion) in enumerate(campos, start=2):
         ws.cell(i, 1, etiqueta).font = Font(bold=True)
         valor = ws.cell(i, 2)
@@ -487,8 +500,6 @@ def escribir_metadatos(ws: Worksheet, ficha: Ficha) -> None:
             ws.add_data_validation(dv)
             dv.add(valor.coordinate)
     ws["B3"] = PERIODO_CORTE
-    if ficha.con_escala:
-        ws[f"B{FILA_ESCALA}"] = "vigesimal"
     ws.column_dimensions["A"].width = 30
 
 
@@ -650,34 +661,34 @@ def hoja_instrucciones(wb: Workbook, ficha: Ficha) -> None:
     ws.cell(fila, 1, "* obligatoria").font = Font(italic=True, size=9)
 
 
-def hoja_conversion(wb: Workbook) -> None:
-    ws = wb.create_sheet(HOJA_CONVERSION)
-    ws["A1"] = "Conversión de escala literal a numérica"
-    ws["A1"].font = ESTILO_TITULO
-    ws["A2"] = (
-        "PROVISIONAL (decisión D1): se confirma con la IE y se justifica en la tesis. "
-        "Escala literal de EBR según RVM N.° 094-2020-MINEDU."
-    )
-    ws["A2"].font = Font(italic=True, color="C00000")
-    for i, cab in enumerate(["Literal", "Valor", "Descripción"], start=1):
-        celda = ws.cell(4, i, cab)
-        celda.font = ESTILO_ENCABEZADO
-        celda.fill = RELLENO_ENCABEZADO
-    for fila, (literal, valor, desc) in enumerate(CONVERSION_LITERAL, start=5):
-        ws.cell(fila, 1, literal)
-        ws.cell(fila, 2, valor)
-        ws.cell(fila, 3, desc)
-    ws.column_dimensions["A"].width = 10
-    ws.column_dimensions["C"].width = 20
-    proteger(ws)
+def prellenar(ws: Worksheet, ficha: Ficha, datos: Prellenado) -> None:
+    """Escribe y bloquea la identificación; deja en blanco lo que se rellena."""
+    columnas = {col.nombre: i for i, col in enumerate(ficha.columnas, start=1)}
+    ws["B2"] = datos.anio
+    ws["B2"].protection = BLOQUEADA
+    ws["B2"].fill = PatternFill("solid", fgColor=CELESTE)
+    for fila, (codigo, grado) in enumerate(datos.alumnos, start=FILA_INICIO):
+        valores = {
+            "codigo": codigo,
+            "grado": grado,
+            "momento": datos.momento,
+            "anio": datos.anio,
+        }
+        for nombre, valor in valores.items():
+            celda = ws.cell(fila, columnas[nombre], valor)
+            celda.protection = BLOQUEADA
+            celda.fill = PatternFill("solid", fgColor=CELESTE)
 
 
-def construir(ficha: Ficha, filas: int) -> Workbook:
+def construir(ficha: Ficha, filas: int, datos: Prellenado | None = None) -> Workbook:
     wb = Workbook()
     ws = wb.active
     ws.title = "Datos"
     escribir_metadatos(ws, ficha)
-    escribir_tabla(ws, ficha, filas)
+    escribir_tabla(ws, ficha, len(datos.alumnos) if datos else filas)
+    if datos:
+        prellenar(ws, ficha, datos)
+        ficha.notas = [NOTA_PRELLENADO, *ficha.notas]
     proteger(ws)
     ws.page_setup.orientation = "landscape"
     ws.page_setup.fitToWidth = 1
@@ -686,8 +697,6 @@ def construir(ficha: Ficha, filas: int) -> Workbook:
     ws.print_title_rows = f"{FILA_ENCABEZADO}:{FILA_ENCABEZADO}"
 
     hoja_instrucciones(wb, ficha)
-    if ficha.con_escala:
-        hoja_conversion(wb)
     wb.active = wb.index(ws)
     return wb
 
@@ -695,24 +704,45 @@ def construir(ficha: Ficha, filas: int) -> Workbook:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--filas", type=int, default=150, help="Filas de captura por ficha"
+        "--filas", type=int, default=150, help="Filas de captura por ficha vacía"
     )
     parser.add_argument(
         "--out",
-        type=str,
-        default=os.path.dirname(os.path.abspath(__file__)),
-        help="Carpeta de salida (por defecto, la del script)",
+        type=Path,
+        default=None,
+        help="Carpeta de salida (por defecto fichas/ o data/raw/<lote>/)",
+    )
+    parser.add_argument(
+        "--prellenar",
+        metavar="LOTE",
+        help="Genera fichas listas para rellenar, ej. 2026_pre o 2026_post",
+    )
+    parser.add_argument(
+        "--por-grado", type=int, default=POR_GRADO, help="Estudiantes por grado"
     )
     args = parser.parse_args()
 
-    os.makedirs(args.out, exist_ok=True)
+    raiz = Path(__file__).resolve().parent.parent
+    datos = None
+    if args.prellenar:
+        datos = Prellenado.desde_lote(args.prellenar, args.por_grado)
+        salida = args.out or raiz / "data" / "raw" / args.prellenar
+    else:
+        salida = args.out or Path(__file__).resolve().parent
+
+    salida.mkdir(parents=True, exist_ok=True)
     for ficha in fichas():
-        ruta = os.path.join(args.out, ficha.archivo)
-        construir(ficha, args.filas).save(ruta)
-        print(f"[OK] {ruta} ({len(ficha.columnas)} columnas, {args.filas} filas)")
-    print(
-        "\nPlantillas vacías. Las fichas llenas se guardan en data/raw/ (no se suben)."
-    )
+        ruta = salida / ficha.archivo
+        if datos and ruta.exists():
+            # Puede tener datos reales ya rellenados: nunca se pisa
+            print(f"[OMITIDO] {ruta} ya existe; no se sobrescribe")
+            continue
+        construir(ficha, args.filas, datos).save(ruta)
+        print(f"[OK] {ruta} ({len(datos.alumnos) if datos else args.filas} filas)")
+    if datos:
+        print("\nFichas listas para rellenar (datos reales: no se suben al repo).")
+    else:
+        print("\nPlantillas vacías. Las fichas llenas van en data/raw/ (no se suben).")
 
 
 if __name__ == "__main__":

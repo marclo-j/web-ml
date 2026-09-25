@@ -162,18 +162,76 @@ def test_criterios_de_exclusion(lote):
     }
 
 
-def test_escala_literal(lote):
-    literal = {
-        "matematica": "A",
-        "comunicacion": "B",
-        "ingles": "ad",
-        "arte_cultura": "C",
-    }
-    carpeta = lote([alumno(**literal)], [asistencia()], [reuniones()], escala="literal")
-    incluidos, _, resumen = consolidar(carpeta)
-    assert resumen["escala"] == "literal"
-    assert incluidos.iloc[0]["n_notas"] == 4
-    assert incluidos.iloc[0]["promedio"] == 2.5
+def test_notas_con_decimales(lote):
+    carpeta = lote(
+        [alumno(matematica=14.5, comunicacion=15.5)], [asistencia()], [reuniones()]
+    )
+    incluidos, _, _ = consolidar(carpeta)
+    assert incluidos.iloc[0]["promedio"] == 15.0
+
+
+def test_fichas_prellenadas(tmp_path):
+    """El juego de --prellenar: 70 códigos, 35 por grado, y los no usados no
+    cuentan como excluidos."""
+    import subprocess
+    import sys
+
+    script = PLANTILLAS / "generar_fichas.py"
+    subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            "--prellenar",
+            "2026_pre",
+            "--out",
+            str(tmp_path),
+        ],
+        check=True,
+        capture_output=True,
+    )
+    hoja = load_workbook(tmp_path / "ficha_2_asistencia.xlsx")["Datos"]
+    filas = [
+        (hoja.cell(r, 1).value, hoja.cell(r, 2).value, hoja.cell(r, 5).value)
+        for r in range(preprocess.FILA_INICIO, preprocess.FILA_INICIO + 70)
+    ]
+    assert filas[0] == ("EST-001", 4, "pre") and filas[34][1] == 4
+    assert filas[35] == ("EST-036", 3, "pre") and filas[69][0] == "EST-070"
+    assert hoja.cell(preprocess.FILA_INICIO + 70, 1).value is None
+
+    # Se rellenan 2 alumnos completos y a un tercero solo la sección
+    from conftest import llenar_prellenada
+
+    llenar_prellenada(tmp_path, 1, {"EST-001": NOTAS_142, "EST-036": NOTAS_142})
+    llenar_prellenada(
+        tmp_path,
+        2,
+        {
+            "EST-001": {"seccion": "A", "dias_programados": 45, "dias_asistidos": 40},
+            "EST-036": {"seccion": "B", "dias_programados": 45, "dias_asistidos": 45},
+            "EST-002": {"seccion": "A"},
+        },
+    )
+    llenar_prellenada(
+        tmp_path,
+        3,
+        {
+            "EST-001": {"reuniones_programadas": 2, "reuniones_asistidas": 1},
+            "EST-036": {"reuniones_programadas": 2, "reuniones_asistidas": 2},
+        },
+    )
+    llenar_prellenada(
+        tmp_path, 1, {"EST-001": {"seccion": "A"}, "EST-036": {"seccion": "B"}}
+    )
+    llenar_prellenada(
+        tmp_path, 3, {"EST-001": {"seccion": "A"}, "EST-036": {"seccion": "B"}}
+    )
+
+    incluidos, excluidos, resumen = consolidar(tmp_path)
+    assert list(incluidos["codigo"]) == ["EST-001", "EST-036"]
+    assert list(incluidos["grupo"]) == ["experimental", "control"]
+    assert list(excluidos["codigo"]) == ["EST-002"]  # empezado pero incompleto
+    assert len(resumen["codigos_sin_usar"]) == 67
+    assert resumen["registros"] == 3
 
 
 def test_historico_requiere_deserto(lote):

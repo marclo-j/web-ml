@@ -14,6 +14,18 @@
 
 ---
 
+### 2026-09-25 — Escala vigesimal confirmada y fichas listas para rellenar
+**Tipo:** desarrollo
+**Qué se hizo:**
+- La IE confirmó la escala vigesimal (0–20): D1 cerrada. Se quitó la escala literal (celda B7, hoja Conversión) de las fichas y de `preprocess.py`.
+- `generar_fichas.py --prellenar 2026_pre` crea en `data/raw/2026_pre/` las 3 fichas con los 70 códigos, grado, momento y año ya escritos y bloqueados; solo se rellena lo que viene en blanco. Verificado en Excel (24 comprobaciones) y con 17 pruebas automáticas.
+**Decisiones tomadas:**
+- Códigos: `EST-001`–`EST-035` = 4.° (experimental), `EST-036`–`EST-070` = 3.° (control). La correspondencia código ↔ nombre la lleva el autor fuera del sistema.
+- Un código pre-llenado sin ningún dato no cuenta como excluido; se informa aparte (`codigos_sin_usar`) para no inflar las exclusiones si una sección tiene menos de 35 alumnos.
+**Pendientes derivados:** rellenar las fichas PRE con los registros del I bimestre y correr `preprocess.py`.
+
+---
+
 ### 2026-09-24 — Fase 1: consolidación de fichas y criterios de exclusión
 **Tipo:** desarrollo
 **Qué se hizo:**
@@ -119,6 +131,6 @@
 |---|---|---|---|
 | 1 | La cita **[39]** se usa para dos fuentes distintas: la definición de "web con ML" y Ttito y Choque | Metodología | ⬜ |
 | 2 | No se define qué son los "valores reales registrados en la institución" contra los que se calculan las métricas | Metodología, análisis de datos | ⬜ |
-| 3 | Falta precisar la escala de calificación de la IE y su conversión si es literal | Metodología, ficha de rendimiento | ⬜ |
+| 3 | Precisar en la metodología que la escala de la IE es vigesimal (0–20), confirmada el 2026-09-25 | Metodología, ficha de rendimiento | ⬜ |
 | 4 | Falta indicar el origen de los datos etiquetados para entrenar el modelo | Metodología | ⬜ |
 | 5 | Falta definir el periodo que abarcan el PRE y el POST (periodo de corte, decisión D3) | Metodología, instrumentos | ⬜ |

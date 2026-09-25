@@ -21,7 +21,7 @@ ARCHIVOS = {
 def llenar_ficha(destino: Path, ficha: int, filas: list[dict], **encabezado) -> Path:
     """Copia la plantilla vacía y escribe filas de prueba por nombre de columna.
 
-    encabezado admite anio (B2) y escala (B7, solo ficha 1).
+    encabezado admite anio (B2).
     """
     ruta = destino / ARCHIVOS[ficha]
     shutil.copy(PLANTILLAS / ARCHIVOS[ficha], ruta)
@@ -29,8 +29,6 @@ def llenar_ficha(destino: Path, ficha: int, filas: list[dict], **encabezado) -> 
     hoja = libro[HOJA_DATOS]
     if "anio" in encabezado:
         hoja["B2"] = encabezado["anio"]
-    if "escala" in encabezado:
-        hoja["B7"] = encabezado["escala"]
     columnas = {
         celda.value: celda.column for celda in hoja[FILA_ENCABEZADO] if celda.value
     }
@@ -39,6 +37,21 @@ def llenar_ficha(destino: Path, ficha: int, filas: list[dict], **encabezado) -> 
             hoja.cell(FILA_INICIO + i, columnas[nombre], valor)
     libro.save(ruta)
     return ruta
+
+
+def llenar_prellenada(carpeta: Path, ficha: int, datos: dict[str, dict]) -> None:
+    """Rellena una ficha de --prellenar buscando la fila por código."""
+    ruta = carpeta / ARCHIVOS[ficha]
+    libro = load_workbook(ruta)
+    hoja = libro[HOJA_DATOS]
+    columnas = {
+        celda.value: celda.column for celda in hoja[FILA_ENCABEZADO] if celda.value
+    }
+    filas = {hoja.cell(r, 1).value: r for r in range(FILA_INICIO, hoja.max_row + 1)}
+    for codigo, valores in datos.items():
+        for nombre, valor in valores.items():
+            hoja.cell(filas[codigo], columnas[nombre], valor)
+    libro.save(ruta)
 
 
 def alumno(codigo="EST-001", grado=4, momento="pre", anio=2026, **extra) -> dict:
@@ -76,11 +89,8 @@ def lote(tmp_path):
     """Crea un lote con las 3 fichas; cada argumento es la lista de filas."""
 
     def crear(f1, f2, f3, **encabezado):
-        encabezado_f1 = dict(encabezado)
-        encabezado_otras = {k: v for k, v in encabezado.items() if k != "escala"}
-        llenar_ficha(tmp_path, 1, f1, **encabezado_f1)
-        llenar_ficha(tmp_path, 2, f2, **encabezado_otras)
-        llenar_ficha(tmp_path, 3, f3, **encabezado_otras)
+        for ficha, filas in ((1, f1), (2, f2), (3, f3)):
+            llenar_ficha(tmp_path, ficha, filas, **encabezado)
         return tmp_path
 
     return crear

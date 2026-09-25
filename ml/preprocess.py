@@ -33,7 +33,6 @@ HOJA_DATOS = "Datos"
 FILA_ENCABEZADO = 9
 FILA_INICIO = 10
 CELDA_ANIO = "B2"
-CELDA_ESCALA = "B7"
 
 # Mismo orden que fichas/generar_fichas.py (lo comprueba ml/tests)
 AREAS = [
@@ -49,9 +48,11 @@ AREAS = [
     "ept",
 ]
 
-# Conversión provisional de la escala literal (decisión D1)
-CONVERSION_LITERAL = {"AD": 4, "A": 3, "B": 2, "C": 1}
-RANGO_ESCALA = {"vigesimal": (0, 20), "literal": (1, 4)}
+# Escala vigesimal confirmada por la IE (decisión D1)
+NOTA_MIN, NOTA_MAX = 0, 20
+
+# Columnas que --prellenar ya escribe; una fila con solo esto es un código sin usar
+IDENTIFICACION = {"codigo", "grado", "momento", "anio"}
 
 GRUPO_POR_GRADO = {3: "control", 4: "experimental"}
 MOMENTOS = {"pre", "post"}
@@ -109,7 +110,6 @@ def calcular_indicadores(
     dias_programados: int,
     reuniones_asistidas: int,
     reuniones_programadas: int,
-    escala: str = "vigesimal",
 ) -> dict[str, float]:
     """Aplica las fórmulas de la tesis a los datos crudos de las fichas.
 
@@ -126,14 +126,10 @@ def calcular_indicadores(
         raise ErrorValidacion("dias_asistidos > dias_programados")
     if not 0 <= reuniones_asistidas <= reuniones_programadas:
         raise ErrorValidacion("reuniones_asistidas > reuniones_programadas")
-    if escala not in RANGO_ESCALA:
-        raise ErrorValidacion(f"escala desconocida: {escala}")
-
     promedio = round(suma_notas / n_notas, 2)
-    minimo, maximo = RANGO_ESCALA[escala]
-    if not minimo <= promedio <= maximo:
+    if not NOTA_MIN <= promedio <= NOTA_MAX:
         raise ErrorValidacion(
-            f"promedio {promedio} fuera de la escala {escala} ({minimo}-{maximo})"
+            f"promedio {promedio} fuera de la escala ({NOTA_MIN}-{NOTA_MAX})"
         )
     return {
         "promedio": promedio,
@@ -159,6 +155,7 @@ class Fila:
     seccion: str
     deserto: int | None
     excluido_motivo: str | None = None
+    solo_identificacion: bool = False
     datos: dict = field(default_factory=dict)
     faltantes: list[str] = field(default_factory=list)
     errores: list[str] = field(default_factory=list)
@@ -195,10 +192,7 @@ def entero(valor) -> int | None:
 def leer_ficha(ruta: Path, ficha: int) -> tuple[list[Fila], dict]:
     libro = load_workbook(ruta, data_only=True, read_only=True)
     hoja = libro[HOJA_DATOS]
-    meta = {
-        "anio": hoja[CELDA_ANIO].value,
-        "escala": (hoja[CELDA_ESCALA].value or "").strip().lower() or None,
-    }
+    meta = {"anio": hoja[CELDA_ANIO].value}
     libro.close()
 
     tabla = pd.read_excel(
@@ -209,9 +203,11 @@ def leer_ficha(ruta: Path, ficha: int) -> tuple[list[Fila], dict]:
     for i, registro in tabla.iterrows():
         if all(vacio(registro[c]) for c in captura):
             continue
-        filas.append(
-            interpretar_fila(registro, ficha, ruta.name, FILA_INICIO + i, meta)
+        fila = interpretar_fila(registro, ficha, ruta.name, FILA_INICIO + i, meta)
+        fila.solo_identificacion = all(
+            vacio(registro[c]) for c in captura if c not in IDENTIFICACION
         )
+        filas.append(fila)
     return filas, meta
 
 
@@ -290,7 +286,7 @@ def interpretar_fila(registro, ficha: int, archivo: str, fila_excel: int, meta):
 
     datos = {}
     if ficha == 1:
-        datos.update(leer_notas(registro, meta["escala"], errores, faltantes))
+        datos.update(leer_notas(registro, errores, faltantes))
     else:
         programado, realizado = MEDIDAS[ficha]
         for nombre in (programado, realizado):
@@ -316,30 +312,22 @@ def interpretar_fila(registro, ficha: int, archivo: str, fila_excel: int, meta):
     )
 
 
-def leer_notas(registro, escala: str | None, errores, faltantes) -> dict:
-    """Convierte las notas por área a suma_notas y n_notas según la escala."""
-    escala = escala or "vigesimal"
+def leer_notas(registro, errores, faltantes) -> dict:
+    """Convierte las notas por área (0 a 20) a suma_notas y n_notas."""
     valores = []
     for area in AREAS:
         nota = registro.get(area)
         if vacio(nota):
             continue  # área que no aplica (ej. exonerado)
-        if escala == "literal":
-            clave = str(nota).strip().upper()
-            if clave not in CONVERSION_LITERAL:
-                errores.append(f"nota {nota!r} en {area} no es AD/A/B/C")
-                continue
-            valores.append(CONVERSION_LITERAL[clave])
-        else:
-            try:
-                numero = float(nota)
-            except (TypeError, ValueError):
-                errores.append(f"nota {nota!r} en {area} no es numérica")
-                continue
-            if not 0 <= numero <= 20:
-                errores.append(f"nota {nota} en {area} fuera de 0-20")
-                continue
-            valores.append(numero)
+        try:
+            numero = float(nota)
+        except (TypeError, ValueError):
+            errores.append(f"nota {nota!r} en {area} no es numérica")
+            continue
+        if not NOTA_MIN <= numero <= NOTA_MAX:
+            errores.append(f"nota {nota} en {area} fuera de {NOTA_MIN}-{NOTA_MAX}")
+            continue
+        valores.append(numero)
     if not valores and not errores:
         faltantes.append("notas")
     return {"suma_notas": round(sum(valores), 2), "n_notas": len(valores)}
@@ -351,7 +339,6 @@ def leer_notas(registro, escala: str | None, errores, faltantes) -> dict:
 def consolidar(carpeta: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
     """Une las 3 fichas por codigo + anio + momento y aplica las exclusiones."""
     filas: dict[int, list[Fila]] = {}
-    escalas = set()
     archivos = {}
     for ficha, (patron, _) in FICHAS.items():
         rutas = sorted(carpeta.glob(patron))
@@ -360,16 +347,8 @@ def consolidar(carpeta: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
         archivos[ficha] = [r.name for r in rutas]
         filas[ficha] = []
         for ruta in rutas:
-            leidas, meta = leer_ficha(ruta, ficha)
+            leidas, _ = leer_ficha(ruta, ficha)
             filas[ficha].extend(leidas)
-            if ficha == 1:
-                escalas.add(meta["escala"] or "vigesimal")
-    if len(escalas) > 1:
-        raise ErrorValidacion(
-            f"Las fichas de rendimiento mezclan escalas {sorted(escalas)}; "
-            "un lote debe usar una sola escala (decisión D1)"
-        )
-    escala = escalas.pop()
 
     # Agrupar por estudiante; las filas sin clave válida se excluyen aparte
     por_clave: dict[tuple, dict[int, list[Fila]]] = {}
@@ -377,9 +356,18 @@ def consolidar(carpeta: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
         for fila in lista:
             por_clave.setdefault(fila.clave, {}).setdefault(ficha, []).append(fila)
 
+    # Códigos pre-llenados que no se usaron (ej. sección con menos de 35
+    # alumnos): no son excluidos, se informan aparte para revisarlos
+    sin_usar = sorted(
+        clave[0]
+        for clave, fichas in por_clave.items()
+        if all(f.solo_identificacion for lista in fichas.values() for f in lista)
+    )
     incluidos, excluidos = [], []
     for clave, fichas in por_clave.items():
-        registro, exclusion = evaluar(clave, fichas, escala)
+        if clave[0] in sin_usar:
+            continue
+        registro, exclusion = evaluar(clave, fichas)
         if exclusion:
             excluidos.append(exclusion)
         else:
@@ -404,9 +392,9 @@ def consolidar(carpeta: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
     ).sort_values(["motivo", "codigo"])
 
     resumen = {
-        "escala": escala,
         "archivos": archivos,
-        "registros": len(por_clave),
+        "registros": len(por_clave) - len(sin_usar),
+        "codigos_sin_usar": sin_usar,
         "incluidos": len(df_incluidos),
         "excluidos": len(df_excluidos),
         "excluidos_por_motivo": {
@@ -427,7 +415,7 @@ def _conteo(df: pd.DataFrame, columna: str) -> dict:
     }
 
 
-def evaluar(clave, fichas: dict[int, list[Fila]], escala: str):
+def evaluar(clave, fichas: dict[int, list[Fila]]):
     """Devuelve (registro incluido, None) o (None, exclusión con su motivo)."""
     todas = [f for lista in fichas.values() for f in lista]
     codigo, anio, momento = clave
@@ -489,7 +477,7 @@ def evaluar(clave, fichas: dict[int, list[Fila]], escala: str):
     # 5. Reglas de las fórmulas
     crudos = {**f1.datos, **f2.datos, **f3.datos}
     try:
-        indicadores = calcular_indicadores(**crudos, escala=escala)
+        indicadores = calcular_indicadores(**crudos)
     except ErrorValidacion as error:
         return excluir(INCONSISTENTE, str(error))
 
@@ -541,7 +529,13 @@ def main() -> None:
         json.dumps(resumen, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
-    print(f"Escala: {resumen['escala']} · registros: {resumen['registros']}")
+    print(f"Registros con datos: {resumen['registros']}")
+    if resumen["codigos_sin_usar"]:
+        sin_usar = resumen["codigos_sin_usar"]
+        print(
+            f"[AVISO] {len(sin_usar)} códigos sin ningún dato (no cuentan como "
+            f"excluidos): {', '.join(sin_usar)}"
+        )
     print(f"[OK] incluidos: {resumen['incluidos']} -> {args.salida}")
     print(f"[OK] excluidos: {resumen['excluidos']} -> {base}_excluidos.csv")
     for motivo, n in resumen["excluidos_por_motivo"].items():

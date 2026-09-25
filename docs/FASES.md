@@ -35,8 +35,9 @@
 ### Fase 1 — Fichas y recolección PRE
 - [x] Diseñar las 3 fichas como plantillas (Excel/Sheets) con las columnas de `VARIABLES.md` → `fichas/` (verificadas en Excel)
 - [x] Definir el periodo de corte (D3: I bimestre; la IE trabaja por bimestres)
-- [ ] Confirmar con la IE la escala de calificación (vigesimal o literal)
-- [ ] Solicitar datos de los 70 alumnos (momento PRE)
+- [x] Confirmar con la IE la escala de calificación → vigesimal 0–20 (D1)
+- [x] Fichas pre-llenadas listas para rellenar: `generar_fichas.py --prellenar 2026_pre` → `data/raw/2026_pre/`
+- [ ] Rellenar las fichas con los datos PRE de los 70 alumnos (I bimestre)
 - [x] Herramienta de consolidación y exclusión lista: `ml/preprocess.py` (16 pruebas en `ml/tests/`)
 - [ ] Aplicar criterios de inclusión/exclusión a los datos reales y registrar cuántos se excluyeron y por qué
 

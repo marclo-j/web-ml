@@ -8,10 +8,16 @@ Plantillas **vacías** de las 3 fichas de la metodología, una por dimensión de
 | `ficha_2_asistencia.xlsx` | Asistencia escolar | Asistencia = (DA / DP) × 100 [1] | `pct_asistencia` |
 | `ficha_3_reuniones.xlsx` | Apoyo familiar | CA = (RA / RT) × 100 [39] | `pct_reuniones` |
 
-Cada libro tiene la hoja **Instrucciones** (fórmula, periodo de corte, privacidad y diccionario de columnas) y la hoja **Datos**. La ficha 1 incluye además la hoja **Conversión** para la escala literal (provisional, decisión D1).
+Cada libro tiene la hoja **Instrucciones** (fórmula, periodo de corte, privacidad y diccionario de columnas) y la hoja **Datos**. Escala de notas: vigesimal 0–20 (decisión D1).
 
 ## ⚠️ Una ficha llena es un dato real
-No se llena en esta carpeta. Se copia la plantilla, se llena y se guarda en `data/raw/` (gitignored). Aquí solo se versionan plantillas vacías.
+No se llena en esta carpeta: aquí solo se versionan plantillas vacías.
+
+## Fichas listas para rellenar
+```bash
+ml/.venv/Scripts/python fichas/generar_fichas.py --prellenar 2026_pre
+```
+Crea las 3 fichas en `data/raw/2026_pre/` (gitignored) con 70 filas: código, grado, momento y año ya escritos y bloqueados (celeste). `EST-001`–`EST-035` = 4.° (experimental), `EST-036`–`EST-070` = 3.° (control). Solo se rellenan las celdas en blanco. Para el POST: `--prellenar 2026_post` (mismos códigos). Nunca sobrescribe fichas que ya existen.
 
 ## Cómo se usan
 - **Periodo de corte:** I bimestre (la IE trabaja por bimestres), igual para el PRE 2026 y para el histórico 2024–2025 (decisión D3 en `docs/VARIABLES.md`).

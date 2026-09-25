@@ -5,7 +5,7 @@ Puente entre las **fichas de registro** de la metodología y las **columnas** de
 ## Indicadores (features del modelo)
 | Símbolo en tesis | Nombre en código | Fórmula | Datos crudos | Tipo | Rango | Ficha |
 |---|---|---|---|---|---|---|
-| Promedio | `promedio` | Σ Notas / n | `suma_notas`, `n_notas` | float | ❓ depende de la escala | Rendimiento académico |
+| Promedio | `promedio` | Σ Notas / n | `suma_notas`, `n_notas` | float | 0–20 (vigesimal) | Rendimiento académico |
 | Asistencia | `pct_asistencia` | (DA / DP) × 100 | `dias_asistidos` (DA), `dias_programados` (DP) | float | 0–100 | Asistencia escolar |
 | CA | `pct_reuniones` | (RA / RT) × 100 | `reuniones_asistidas` (RA), `reuniones_programadas` (RT) | float | 0–100 | Apoyo familiar |
 
@@ -75,11 +75,13 @@ Une las 3 fichas de un lote por `codigo` + `anio` + `momento`, aplica las reglas
 ```bash
 ml/.venv/Scripts/python ml/preprocess.py --entrada data/raw/2026_pre --salida data/processed/2026_pre.csv
 ```
-Genera `2026_pre.csv` (incluidos con indicadores), `2026_pre_excluidos.csv` (motivo, detalle y fila de Excel de cada excluido) y `2026_pre_resumen.json` (conteos por motivo y grupo, para Resultados). Se niega a escribir fuera de `data/processed/`. Un lote debe usar una sola escala de calificación.
+Genera `2026_pre.csv` (incluidos con indicadores), `2026_pre_excluidos.csv` (motivo, detalle y fila de Excel de cada excluido) y `2026_pre_resumen.json` (conteos por motivo y grupo, para Resultados). Se niega a escribir fuera de `data/processed/`.
+
+Un código pre-llenado sin ningún dato en las 3 fichas (ej. una sección con menos de 35 alumnos) no se cuenta como excluido: se informa como `codigos_sin_usar` para revisarlo.
 
 ## ❓ Decisiones pendientes
 | # | Decisión | Opciones | Estado |
 |---|---|---|---|
-| D1 | Escala de calificación de la IE | a) Vigesimal 0–20 (usar tal cual) · b) Literal AD/A/B/C (normativa MINEDU para EBR, RVM N.° 094-2020-MINEDU) → convertir a numérico (ej. AD=4, A=3, B=2, C=1) y justificarlo en la tesis | 🟨 Tentativo: vigesimal (práctica habitual en secundaria según el autor). Confirmar cómo están los registros de la IE, incluido el histórico 2024–2025 (la ficha 1 soporta ambas) |
+| D1 | Escala de calificación de la IE | **Vigesimal 0–20**, se usa tal cual (se admiten decimales) | ✅ Confirmado por la IE 2026-09-25. Se quitó el soporte de escala literal de las fichas y de `preprocess.py` |
 | D2 | Qué es `nivel_riesgo_real` en 2026 | a) Clasificación del tutor/TOE · b) Deserción efectiva al cierre del periodo · c) Otra fuente institucional | ⬜ Consultar con asesor |
 | D3 | Periodo de corte de los indicadores | Datos acumulados hasta el cierre del **I bimestre** (la IE trabaja por bimestres), igual para el PRE 2026 y el histórico 2024–2025 | ✅ Decidido 2026-09-24 (ver `MODELO.md` → fuga de información) |

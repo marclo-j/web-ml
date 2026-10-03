@@ -14,7 +14,7 @@
 ## Datos de entrenamiento
 | Opción | Descripción | Estado |
 |---|---|---|
-| ✅ **A (preferida)** | Alumnos de 2024–2025 con desenlace conocido. La IE reporta 29 % y 35 % de deserción esos años, por lo que el registro existe | ⬜ Solicitada a la IE (2026-09-25); no la entregó |
+| ✅ **A (preferida)** | Alumnos de 2024–2025 con desenlace conocido. La IE reporta 29 % y 35 % de deserción esos años, por lo que el registro existe | 🟨 Fichas 2024 y 2025 de la IE recibidas (70 + 70 alumnos); `deserto` reconciliado con la regla D7 → 140 alumnos, 37 desertores (26.4 %). Entrenado `rf_v1` |
 | ⚠️ B (respaldo, en uso para el avance) | Etiquetar por reglas de umbral tomadas de la literatura, sobre los datos PRE 2026 reales (69 alumnos) | 🟨 En uso — `ml/etiquetar_umbral.py` → `rf_v0b` |
 
 > ⚠️ Con la opción B el modelo solo aprende a reproducir las reglas con que se etiquetó. Las métricas saldrían altas pero no demostrarían capacidad predictiva real. Si se usa, debe declararse como limitación en la tesis.
@@ -27,14 +27,15 @@ Un alumno se etiqueta `deserto = 1` (en riesgo, solo para entrenar) si cumple **
 | Regla | Umbral | Fuente |
 |---|---|---|
 | Rendimiento | `promedio` < 11 | Nota mínima aprobatoria en la escala vigesimal peruana (RVM N.° 094-2020-MINEDU, misma norma de la decisión D1) |
-| Asistencia | `pct_asistencia` < 85 % | Absentismo crónico de alto riesgo: Balfanz y Byrnes [40], difundido por Attendance Works / U.S. Dept. of Education — investigación en EE. UU., se declara como adaptación al no encontrarse una cifra específica para secundaria peruana |
-| Apoyo familiar | `pct_reuniones` < 50 % | **Umbral operacional del autor** (participación por debajo de la mitad de las reuniones); no proviene de una cifra publicada — pendiente de validar con el asesor |
+| Asistencia | `pct_asistencia` < 85 % | Absentismo crónico de alto riesgo: Balfanz y Byrnes [42], difundido por Attendance Works / U.S. Dept. of Education — investigación en EE. UU., se declara como adaptación al no encontrarse una cifra específica para secundaria peruana |
+| Apoyo familiar | `pct_reuniones` < 50 % | **Umbral operacional del autor** (participación por debajo de la mitad de las reuniones); no proviene de una cifra publicada. Decisión 2026-10-03: se mantiene en 50 % y se declara como supuesto del autor |
 
-El propio MINEDU usa un enfoque análogo (rendimiento + asistencia con ML) en su sistema **Alerta Escuela**, sobre SIAGIE [41], lo que respalda el enfoque general aunque no publica el umbral numérico exacto.
+El propio MINEDU usa un enfoque análogo (rendimiento + asistencia con ML) en su sistema **Alerta Escuela** [41] — la misma cita que ya usa la Introducción de la tesis para ese sistema — lo que respalda el enfoque general aunque no publica el umbral numérico exacto.
 
-> ❓ **[40] y [41] son números provisionales** (siguientes disponibles a falta de ver la bibliografía completa de la tesis): al incorporar esto al documento, verificar que no choquen con una cita ya asignada y agregar las referencias:
-> - [40] R. Balfanz y J. Byrnes, "Chronic Absenteeism: A Significant, Overlooked Challenge to Student Success", Everyone Graduates Center / Attendance Works.
-> - [41] Ministerio de Educación del Perú, "Alerta Escuela — sistema de alerta temprana", SIAGIE. Disponible: https://alertaescuela.minedu.gob.pe/
+> ✅ **[42] confirmado por el autor el 2026-10-03** (en el documento se usan del [1] al [41], con el [9] libre — se revisó `CALDERON SALAZAR.docx` el 2026-09-25). [41] ya es Alerta Escuela en la Introducción [línea ~72]. Al escribir Resultados, agregar a Referencias:
+> - [42] R. Balfanz y J. Byrnes, "Chronic Absenteeism: A Significant, Overlooked Challenge to Student Success", Everyone Graduates Center / Attendance Works.
+>
+> La sección Referencias del documento todavía está vacía (solo el título) — revisar también que el [9] no esté reservado para algo antes de reutilizarlo.
 
 Script: `ml/etiquetar_umbral.py --entrada data/processed/2026_pre.csv --salida data/processed/2026_pre_opcion_b.csv`.
 

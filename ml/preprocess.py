@@ -342,7 +342,7 @@ def leer_notas(registro, errores, faltantes) -> dict:
 
 
 def consolidar(
-    carpeta: Path, permitir_ejemplo: bool = False
+    carpeta: Path, permitir_ejemplo: bool = False, deserto_cualquiera: bool = False
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
     """Une las 3 fichas por codigo + anio + momento y aplica las exclusiones.
 
@@ -386,7 +386,7 @@ def consolidar(
     for clave, fichas in por_clave.items():
         if clave[0] in sin_usar:
             continue
-        registro, exclusion = evaluar(clave, fichas)
+        registro, exclusion = evaluar(clave, fichas, deserto_cualquiera)
         if exclusion:
             excluidos.append(exclusion)
         else:
@@ -435,7 +435,7 @@ def _conteo(df: pd.DataFrame, columna: str) -> dict:
     }
 
 
-def evaluar(clave, fichas: dict[int, list[Fila]]):
+def evaluar(clave, fichas: dict[int, list[Fila]], deserto_cualquiera: bool = False):
     """Devuelve (registro incluido, None) o (None, exclusión con su motivo)."""
     todas = [f for lista in fichas.values() for f in lista]
     codigo, anio, momento = clave
@@ -486,11 +486,16 @@ def evaluar(clave, fichas: dict[int, list[Fila]]):
                 INCONSISTENTE,
                 f"{campo} distinto entre fichas: {sorted(map(str, valores))}",
             )
-    # deserto basta en una ficha; si está en varias, debe coincidir
+    # deserto basta en una ficha; si está en varias, debe coincidir, salvo que
+    # deserto_cualquiera: entonces basta un 1 en cualquier ficha (decisión D7)
     desercion = {f.deserto for f in (f1, f2, f3) if f.deserto is not None}
-    if len(desercion) > 1:
+    if len(desercion) > 1 and not deserto_cualquiera:
         return excluir(INCONSISTENTE, "deserto distinto entre fichas")
-    deserto = desercion.pop() if desercion else None
+    deserto = (
+        (max(desercion) if deserto_cualquiera else desercion.pop())
+        if desercion
+        else None
+    )
     if anio < ANIO_ACTUAL and deserto is None:
         return excluir(INCOMPLETA, "falta deserto (obligatorio en el histórico)")
 
@@ -535,13 +540,20 @@ def main() -> None:
         action="store_true",
         help="Solo para demostraciones: procesa aunque haya filas EJEMPLO",
     )
+    parser.add_argument(
+        "--deserto-cualquiera",
+        action="store_true",
+        help="Histórico: deserto=1 si cualquiera de las 3 fichas lo marca (D7)",
+    )
     args = parser.parse_args()
 
     for flujo in (sys.stdout, sys.stderr):
         flujo.reconfigure(encoding="utf-8", errors="replace")
     comprobar_salida(args.salida)
     try:
-        incluidos, excluidos, resumen = consolidar(args.entrada, args.permitir_ejemplo)
+        incluidos, excluidos, resumen = consolidar(
+            args.entrada, args.permitir_ejemplo, args.deserto_cualquiera
+        )
     except (FileNotFoundError, ErrorValidacion) as error:
         raise SystemExit(f"[ERROR] {error}") from error
 

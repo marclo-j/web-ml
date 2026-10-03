@@ -17,7 +17,7 @@ Redondeo: 2 decimales. Se calculan **siempre en el backend** (`backend/app/servi
 | `deserto` | Si el alumno abandonó en ese año (dato histórico) | int | 0 / 1 | Solo en dataset de entrenamiento |
 | `probabilidad` | Salida del modelo, P(deserto = 1) | float | 0–1 | Predicciones |
 | `nivel_riesgo` | Nivel derivado de la probabilidad | categórica ordinal | bajo / medio / alto | Predicciones |
-| `nivel_riesgo_real` | Valor de referencia de la IE para evaluar el modelo en 2026 | categórica | ❓ por definir | Registros |
+| `nivel_riesgo_real` | Valor de referencia de la IE para evaluar el modelo en 2026 | categórica | Deserción efectiva al cierre del periodo (D2) | Registros |
 
 Umbrales de probabilidad → nivel: ver `MODELO.md`.
 
@@ -83,5 +83,6 @@ Un código pre-llenado sin ningún dato en las 3 fichas (ej. una sección con me
 | # | Decisión | Opciones | Estado |
 |---|---|---|---|
 | D1 | Escala de calificación de la IE | **Vigesimal 0–20**, se usa tal cual (se admiten decimales) | ✅ Confirmado por la IE 2026-09-25. Se quitó el soporte de escala literal de las fichas y de `preprocess.py` |
-| D2 | Qué es `nivel_riesgo_real` en 2026 | a) Clasificación del tutor/TOE · b) Deserción efectiva al cierre del periodo · c) Otra fuente institucional | ⬜ Consultar con asesor |
+| D2 | Qué es `nivel_riesgo_real` en 2026 | a) Clasificación del tutor/TOE · b) Deserción efectiva al cierre del periodo · c) Otra fuente institucional | ✅ **Opción b** (deserción efectiva al cierre del periodo), decidido por el autor 2026-10-03. Coherente con el modelo binario `deserto` de `MODELO.md` |
+| D7 | Cómo fijar `deserto` del histórico cuando las 3 fichas no coinciden | Estricto (excluir) · **cualquiera**: 1 si cualquier ficha lo marca | ✅ **Cualquiera**, 2026-10-03: el 1 aparece casi siempre en una sola ficha (nunca discordancia aleatoria) y da 27 % / 26 % de deserción en 2024 / 2025, cerca del 29 % que reporta la IE. `preprocess.py --deserto-cualquiera`. **Confirmado con la IE (2026-10-03).** Actualización 2026-10-03: el autor corrigió las fichas 2024 y 2025 marcando `deserto = 1` en las 3 fichas de los 37 alumnos con marcas parciales (regla: desertor = 1 en las 3 fichas). Resultado idéntico a D7; ya no hace falta `--deserto-cualquiera` |
 | D3 | Periodo de corte de los indicadores | Datos acumulados hasta el cierre del **I bimestre** (la IE trabaja por bimestres), igual para el PRE 2026 y el histórico 2024–2025 | ✅ Decidido 2026-09-24 (ver `MODELO.md` → fuga de información) |

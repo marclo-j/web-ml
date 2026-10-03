@@ -14,6 +14,29 @@
 
 ---
 
+### 2026-10-03 — Histórico real 2024–2025 procesado y `rf_v1`
+**Confirmación:** la IE confirmó el criterio de `deserto` (2026-10-03).
+**Corrección de fichas (autor):** los 37 alumnos con `deserto` parcial (`data/processed/deserto_a_corregir.csv`) quedaron con 1 en las 3 fichas. Con la regla estricta se obtienen los mismos 140 alumnos, 37 desertores e indicadores idénticos a D7. Las fichas originales no se respaldaron antes de editarlas.
+**Tipo:** desarrollo
+**Qué se hizo:** Se procesaron las fichas de la IE en `data/raw/2024_pre` y `2025_pre`. Con el criterio estricto quedaban 103 incluidos y 0 desertores: `deserto` no coincidía entre fichas en 19 y 18 alumnos. Se añadió `preprocess.py --deserto-cualquiera` y se obtuvo `data/processed/historico.csv` (140 alumnos, 37 desertores). Se entrenó `rf_v1` con `--fuente historico_real`.
+**Resultados (no citables aún):** CV k=5 F1 0.63 ± 0.09; holdout 20 % (n=28, 7 positivos) accuracy 0.54, F1 0.38. Importancia por permutación negativa en `promedio` y `pct_asistencia`: con n=140 el modelo apenas supera el ruido.
+**Ajuste (`ml/tune.py`, CV anidada 5x2, grilla de `MODELO.md`):** config. inicial F1 0.51 ± 0.09, AUC 0.78 ± 0.08; con búsqueda F1 0.52 ± 0.12, AUC 0.78 ± 0.08. El ajuste no mejora de forma apreciable y no hay combinación estable entre folds (9 distintas en 10). Se mantiene la configuración inicial; con n=140 el techo lo fija el tamaño de muestra y la poca señal de 3 variables.
+**Decisiones tomadas:** D7 (`deserto` = 1 si cualquier ficha lo marca).
+**Pendientes derivados:** validar D7 con el asesor/IE; ajustar hiperparámetros (GridSearchCV) y considerar CV repetida por el tamaño del holdout; definir umbrales de probabilidad.
+
+---
+
+### 2026-10-03 — Cierre de decisiones pendientes
+**Tipo:** desarrollo
+**Qué se hizo:** Se registraron las decisiones del autor sobre los ❓ abiertos en `VARIABLES.md` y `MODELO.md`.
+**Decisiones tomadas:**
+- D2: `nivel_riesgo_real` = deserción efectiva al cierre del periodo (opción b).
+- Umbral `pct_reuniones` < 50 % se mantiene como umbral operacional del autor, declarado como supuesto.
+- Cita [42] (Balfanz y Byrnes) confirmada.
+**Pendientes derivados:** con el asesor siguen la variable contrastada y la comparación pre vs post intragrupo (`PLAN_ESTADISTICO.md`).
+
+---
+
 ### 2026-09-25 — Pipeline de entrenamiento y Opción B sobre datos reales
 **Tipo:** desarrollo
 **Qué se hizo:**

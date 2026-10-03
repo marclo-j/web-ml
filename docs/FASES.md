@@ -8,7 +8,7 @@
 |---|---|---|---|---|
 | 0 | Setup y documentación | ✅ | — | Repo con estructura y `/docs` |
 | 1 | Fichas y recolección PRE | ✅ | 0 | 3 fichas + datos PRE de los 70 alumnos |
-| 2 | Dataset de entrenamiento (etiquetado) | ⛔ | 1 | CSV histórico con variable objetivo — IE se negó a entregarlo |
+| 2 | Dataset de entrenamiento (etiquetado) | 🟨 | 1 | `data/processed/historico.csv`: 140 alumnos (2024–2025), 37 desertores. Regla de `deserto` (D7) confirmada con la IE el 2026-10-03 |
 | 3 | Entrenamiento y evaluación del modelo | 🟨 | 2 | `rf_v1.joblib` + métricas — pipeline listo, corridas de prueba hechas, falta el histórico real |
 | 4 | Backend (API) | ⬜ | 3 | FastAPI con predicción y CRUD |
 | 5 | Frontend (dashboard) | ⬜ | 4 | Web con listado de riesgo por alumno |
@@ -25,7 +25,7 @@
 - [x] Definir documentos del repo
 - [x] Crear repo y estructura de carpetas (`ARQUITECTURA.md`)
 - [x] Configurar `.gitignore` (datos reales fuera)
-- [ ] Cerrar decisiones pendientes marcadas con ❓ en `VARIABLES.md` y `MODELO.md` — sigue abierto, depende de la IE y del asesor
+- [x] Cerrar decisiones pendientes de `VARIABLES.md` y `MODELO.md` (D2 opción b, umbral 50 %, cita [42]) — 2026-10-03. Siguen abiertas con el asesor las del `PLAN_ESTADISTICO.md` (variable contrastada y Wilcoxon / t pareada)
 
 ### Preparación de Fase 3 (adelantada)
 - [x] `ml/generate_synthetic.py` + `data/synthetic/historico.csv` y `carga_prueba.csv`, para no bloquear el desarrollo mientras llega el histórico real (ver `LOG_AVANCES.md`)
@@ -55,7 +55,7 @@
 - [x] Script `ml/train.py` con validación cruzada estratificada k=5 + holdout 80/20
 - [x] Métricas: accuracy, precision, recall, F1 + matriz de confusión
 - [x] Importancia de variables (MDI y permutación; sustenta OE1–OE3)
-- [ ] Guardar modelo versionado **con el histórico real** y registrar en `MODELO.md` (bloqueado por Fase 2)
+- [x] `rf_v1` entrenado con el histórico real (2026-10-03): CV F1 0.63 ± 0.09, pero holdout F1 0.38 (n=28, 7 positivos). Métrica inestable; falta registrarlo en `MODELO.md` y ajustar hiperparámetros
 - [x] Corridas de prueba: `rf_v0` (sintético) y `rf_v0b` (Opción B, real PRE 2026) — ver `MODELO.md`, ninguna es resultado de tesis
 
 **Qué decir:** "Estas son las métricas del modelo y el peso de cada dimensión en la predicción."

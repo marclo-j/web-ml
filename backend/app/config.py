@@ -27,9 +27,9 @@ def _lista(valor: str) -> list[str]:
 class Config:
     database_url: str
     model_path: Path
-    supabase_url: str
-    supabase_jwt_secret: str
+    jwt_secret: str
     auth_desactivada: bool
+    jwt_expira_min: int = 480  # una jornada escolar
     cors_origins: list[str] = field(default_factory=list)
 
 
@@ -41,8 +41,8 @@ def leer_config() -> Config:
     return Config(
         database_url=os.getenv("DATABASE_URL", "sqlite:///./local.db"),
         model_path=ruta_modelo,
-        supabase_url=os.getenv("SUPABASE_URL", "").rstrip("/"),
-        supabase_jwt_secret=os.getenv("SUPABASE_JWT_SECRET", ""),
+        jwt_secret=os.getenv("JWT_SECRET", ""),
+        jwt_expira_min=int(os.getenv("JWT_EXPIRA_MIN", "480")),
         # Solo para desarrollo local; main.py se niega a arrancar así con Postgres
         auth_desactivada=os.getenv("AUTH_DESACTIVADA", "") == "1",
         cors_origins=_lista(os.getenv("CORS_ORIGINS", "http://localhost:3000")),

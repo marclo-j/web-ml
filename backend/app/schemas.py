@@ -128,3 +128,22 @@ class InfoModelo(BaseModel):
     umbrales: dict[str, float]
     aumento: dict | None
     aviso: str | None
+
+
+class UsuarioPublico(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    email: str
+    rol: Literal["tutor", "directivo"]
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: Literal["bearer"]
+    expira_en: int = Field(description="Segundos de validez del token")
+    usuario: UsuarioPublico
+
+
+class CambioPassword(BaseModel):
+    password_actual: str
+    password_nueva: str

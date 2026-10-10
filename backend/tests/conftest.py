@@ -1,6 +1,6 @@
 """Fixtures: app con SQLite en memoria, un modelo pequeño entrenado aquí con
-datos inventados (no se usa el modelo real ni datos de alumnos) y tokens HS256
-firmados con un secreto de prueba."""
+datos inventados (no se usa el modelo real ni datos de alumnos) y un usuario de
+prueba que inicia sesión por /auth/login."""
 
 import json
 import sys
@@ -12,15 +12,21 @@ import jwt
 import numpy as np
 import pandas as pd
 import pytest
+from argon2 import PasswordHasher
 from fastapi.testclient import TestClient
 from sklearn.ensemble import RandomForestClassifier
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from app import auth
+from app.auth import EMISOR
 from app.config import Config
+from app.crear_usuario import guardar_usuario
 from app.main import crear_app
 
 SECRETO = "secreto-de-prueba-que-no-es-real-0123456789"
+EMAIL = "tutor@ie.test"
+PASSWORD = "clave-de-prueba-123"  # solo existe en la base en memoria de las pruebas
 FEATURES = ["promedio", "pct_asistencia", "pct_reuniones"]
 
 
@@ -64,12 +70,19 @@ def _config(ruta_modelo: Path, **cambios) -> Config:
     valores = {
         "database_url": "sqlite://",
         "model_path": ruta_modelo,
-        "supabase_url": "",
-        "supabase_jwt_secret": SECRETO,
+        "jwt_secret": SECRETO,
         "auth_desactivada": False,
         "cors_origins": ["http://localhost:3000"],
     }
     return Config(**{**valores, **cambios})
+
+
+@pytest.fixture(autouse=True)
+def hasher_rapido(monkeypatch):
+    """Argon2id con parámetros mínimos: las pruebas no miden su costo."""
+    monkeypatch.setattr(
+        auth, "_hasher", PasswordHasher(time_cost=1, memory_cost=64, parallelism=1)
+    )
 
 
 @pytest.fixture
@@ -80,23 +93,33 @@ def crear_cliente(ruta_modelo):
     return fabrica
 
 
-def token(**cambios) -> str:
+def crear_usuario(cliente: TestClient, email=EMAIL, password=PASSWORD, rol="tutor"):
+    with cliente.app.state.sesiones() as sesion:
+        guardar_usuario(sesion, email, password, rol)
+
+
+def iniciar_sesion(cliente: TestClient, email=EMAIL, password=PASSWORD):
+    return cliente.post("/auth/login", data={"username": email, "password": password})
+
+
+def token_firmado(secreto=SECRETO, **cambios) -> str:
     datos = {
-        "sub": "usuario-1",
-        "email": "tutor@ejemplo.test",
-        "aud": "authenticated",
+        "sub": "00000000-0000-0000-0000-000000000001",
+        "iss": EMISOR,
         "exp": int(time.time()) + 3600,
-        "app_metadata": {"rol": "tutor"},
         **cambios,
     }
-    return jwt.encode(datos, SECRETO, algorithm="HS256")
+    return jwt.encode(datos, secreto, algorithm="HS256")
 
 
 @pytest.fixture
 def cliente(crear_cliente) -> TestClient:
-    """Cliente autenticado como tutor."""
+    """Cliente con sesión iniciada como tutor."""
     c = crear_cliente()
-    c.headers["Authorization"] = f"Bearer {token()}"
+    crear_usuario(c)
+    r = iniciar_sesion(c)
+    assert r.status_code == 200, r.text
+    c.headers["Authorization"] = f"Bearer {r.json()['access_token']}"
     return c
 
 

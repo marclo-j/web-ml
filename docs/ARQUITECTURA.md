@@ -8,7 +8,7 @@ flowchart LR
   U[Tutor / Directivo] --> F[Frontend<br/>Next.js]
   F -->|HTTP JSON| B[Backend<br/>FastAPI]
   B -->|predict_proba| M[Modelo<br/>Random Forest .joblib]
-  B <--> D[(Supabase<br/>PostgreSQL)]
+  B <--> D[(Neon<br/>PostgreSQL)]
   H[(Histórico 2024-2025<br/>con desenlace)] --> T[ml/train.py]
   T -->|genera| M
 ```
@@ -19,11 +19,12 @@ flowchart LR
 | ML | Python 3.11, pandas, scikit-learn, joblib | Declarado en la metodología [35] |
 | Estadística | scipy, statsmodels | Shapiro-Wilk, K-S (Lilliefors), t de Student, Mann-Whitney |
 | Backend | FastAPI + Uvicorn | Mismo lenguaje que el modelo; carga el `.joblib` sin puentes |
-| Base de datos | Supabase (PostgreSQL) | Gestionado, con Auth incluido |
+| Base de datos | Neon (PostgreSQL) | Gestionado, capa gratuita; decisión D10 (2026-10-10) |
+| Autenticación | Propia del backend: Argon2id + JWT (PyJWT) | Sin servicios externos (D10); ver "Seguridad y privacidad" |
 | Frontend | Next.js (App Router) + TypeScript + Tailwind | Dashboard rápido de construir |
 | Deploy | Vercel (frontend), Render (backend) | Capas gratuitas suficientes para el piloto |
 
-> Conexión Render → Supabase: usar la cadena del **connection pooler** de Supabase (compatible con IPv4), no la conexión directa.
+> Conexión Render → Neon: usar la cadena con **connection pooling** (host terminado en `-pooler`) y `sslmode=require`. Neon suspende la base sin uso; la primera consulta tras la pausa tarda unos cientos de ms más.
 
 ## Estructura del repositorio
 ```
@@ -59,9 +60,16 @@ web-ml/
     └── lib/api.ts
 ```
 
-## Modelo de datos (Supabase)
+## Modelo de datos (Neon)
 ```mermaid
 erDiagram
+  usuarios {
+    uuid id PK
+    text email "único"
+    text password_hash "Argon2id"
+    text rol "tutor | directivo"
+    bool activo
+  }
   estudiantes ||--o{ registros : tiene
   registros ||--o| predicciones : genera
   estudiantes {
@@ -98,7 +106,7 @@ erDiagram
 ```
 Se guardan los **datos crudos** (días, notas, reuniones) además de los indicadores calculados, para que cada valor sea trazable hasta su ficha.
 
-Restricciones: `codigo` único; un registro por alumno y momento (`unique (estudiante_id, momento)`); una predicción por registro (se actualiza si se vuelven a cargar los datos). Esquema: `backend/sql/001_esquema.sql` (con RLS activado sin políticas: solo la API accede a las tablas). El modelo que carga el backend es el `RandomForestClassifier` de sklearn (sin el envoltorio de aumento), con la misma versión de scikit-learn que `ml/` (1.9.1).
+Restricciones: `codigo` único; un registro por alumno y momento (`unique (estudiante_id, momento)`); una predicción por registro (se actualiza si se vuelven a cargar los datos). Esquema: `backend/sql/001_esquema.sql`; solo el backend se conecta a la base. El modelo que carga el backend es el `RandomForestClassifier` de sklearn (sin el envoltorio de aumento), con la misma versión de scikit-learn que `ml/` (1.9.1).
 
 ## Flujo principal
 1. El tutor registra (o carga por CSV) los datos crudos de un alumno.
@@ -107,6 +115,13 @@ Restricciones: `codigo` único; un registro por alumno y momento (`unique (estud
 4. Se guarda registro + predicción; el dashboard muestra el nivel con color.
 
 ## Seguridad y privacidad
-- Solo usuarios autenticados (Supabase Auth). Roles: `tutor`, `directivo`.
+- Solo usuarios autenticados, con autenticación propia del backend (D10, `backend/app/auth.py`):
+  - Contraseñas guardadas como hash **Argon2id** (nunca en texto plano), mínimo 10 caracteres.
+  - Sesión con token **JWT HS256** firmado con `JWT_SECRET` (≥ 32 caracteres), 8 horas de validez.
+  - En cada petición se verifica que el usuario siga activo: desactivarlo corta el acceso al momento.
+  - 5 intentos fallidos seguidos bloquean el correo 15 minutos; el mensaje de error no revela si el correo existe.
+  - Sin registro público: el administrador crea usuarios con `python -m app.crear_usuario`.
+  - Roles: `tutor`, `directivo` (`requiere_rol` disponible; por ahora todos los endpoints admiten ambos).
+- La web debe servirse por HTTPS (Render y Vercel lo dan por defecto): el token viaja en cada petición.
 - Ningún nombre ni DNI en la BD: solo `codigo`. La tabla código ↔ nombre queda **fuera del sistema**, en poder de la IE.
 - Variables sensibles en `.env`, nunca en el repo.

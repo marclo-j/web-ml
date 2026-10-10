@@ -14,6 +14,18 @@
 
 ---
 
+### 2026-10-10 — Neon y autenticación propia (D10)
+**Tipo:** desarrollo
+**Qué se hizo:**
+- Decisión del autor: base de datos en Neon (PostgreSQL) en lugar de Supabase, y autenticación hecha en el backend, sin servicios externos. La tesis no nombra a Supabase (solo "base de datos"), así que no cambia la metodología.
+- `backend/app/auth.py`: contraseñas con Argon2id; sesión con JWT HS256 (`JWT_SECRET` ≥ 32 caracteres, 8 h); usuario activo verificado en cada petición; bloqueo de 15 min tras 5 fallos; mismo error para correo inexistente o contraseña incorrecta. Endpoints `/auth/login`, `/auth/yo`, `/auth/cambiar-password`. Sin registro público: `python -m app.crear_usuario` (contraseña por `getpass`, también `--restablecer` y `--desactivar`).
+- Tabla `usuarios` en `db.py` y `sql/001_esquema.sql`; se quitó el bloque RLS (era para la API pública de Supabase). Configuración: `JWT_SECRET`, `JWT_EXPIRA_MIN`; fuera `SUPABASE_URL` y `SUPABASE_JWT_SECRET`. La app se crea con `uvicorn app.main:crear_app --factory`.
+- 42 pruebas (14 de autenticación).
+**Decisiones tomadas:** D10 (Neon + autenticación propia).
+**Pendientes derivados:** el autor crea el proyecto de Neon, ejecuta `sql/001_esquema.sql`, completa `backend/.env` y crea los usuarios; definir restricciones por rol.
+
+---
+
 ### 2026-10-10 — Fase 4: backend FastAPI
 **Tipo:** desarrollo
 **Qué se hizo:**

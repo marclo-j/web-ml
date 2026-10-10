@@ -1,49 +1,8 @@
-"""Pruebas de los endpoints de docs/API.md."""
+"""Pruebas de los endpoints de docs/API.md (la autenticación, en test_auth.py)."""
 
 import pytest
 
-from .conftest import CRUDOS_ALTO, CRUDOS_BAJO, token
-
-# --- Autenticación -----------------------------------------------------------
-
-
-def test_health_sin_token(crear_cliente):
-    r = crear_cliente().get("/health")
-    assert r.status_code == 200 and r.json() == {"status": "ok", "modelo": "rf_test"}
-
-
-@pytest.mark.parametrize(
-    "encabezado",
-    [
-        None,
-        "Bearer no-es-un-jwt",
-        f"Bearer {token(exp=1)}",  # vencido
-        f"Bearer {token(aud='otra')}",
-    ],
-)
-def test_401_sin_token_valido(crear_cliente, encabezado):
-    c = crear_cliente()
-    if encabezado:
-        c.headers["Authorization"] = encabezado
-    assert c.get("/estudiantes").status_code == 401
-
-
-def test_token_firmado_con_otro_secreto(crear_cliente):
-    import jwt
-
-    malo = jwt.encode(
-        {"sub": "x", "aud": "authenticated", "exp": 9999999999}, "otro" * 10, "HS256"
-    )
-    c = crear_cliente()
-    c.headers["Authorization"] = f"Bearer {malo}"
-    assert c.get("/estudiantes").status_code == 401
-
-
-def test_auth_desactivada_solo_con_sqlite(crear_cliente):
-    assert crear_cliente(auth_desactivada=True).get("/estudiantes").status_code == 200
-    with pytest.raises(RuntimeError, match="SQLite"):
-        crear_cliente(auth_desactivada=True, database_url="postgresql://x@localhost/db")
-
+from .conftest import CRUDOS_ALTO, CRUDOS_BAJO, crear_usuario, iniciar_sesion
 
 # --- Modelo y predicción -----------------------------------------------------
 
@@ -76,7 +35,8 @@ def test_predecir_422_con_la_regla_que_falla(cliente):
 
 def test_503_sin_modelo(crear_cliente, tmp_path):
     c = crear_cliente(model_path=tmp_path / "rf_no_existe.joblib")
-    c.headers["Authorization"] = f"Bearer {token()}"
+    crear_usuario(c)
+    c.headers["Authorization"] = f"Bearer {iniciar_sesion(c).json()['access_token']}"
     assert c.get("/health").json() == {"status": "sin_modelo", "modelo": None}
     assert c.post("/predecir", json=CRUDOS_BAJO).status_code == 503
 

@@ -1,6 +1,17 @@
--- Esquema de producción en Supabase (PostgreSQL). Ejecutar una vez en el
+-- Esquema de producción en Neon (PostgreSQL 16+). Ejecutar una vez en el
 -- SQL Editor del proyecto. Debe coincidir con backend/app/db.py.
--- Ningún nombre ni DNI: solo el código anonimizado (Ley N.° 29733).
+-- Ningún nombre ni DNI de estudiantes: solo el código anonimizado (Ley N.° 29733).
+
+-- Personal de la IE que usa la web. Solo el hash Argon2id de la contraseña.
+-- Se crean con: python -m app.crear_usuario (no hay registro público).
+create table if not exists usuarios (
+  id uuid primary key default gen_random_uuid(),
+  email varchar(254) not null unique,
+  password_hash varchar(255) not null,
+  rol varchar(16) not null check (rol in ('tutor', 'directivo')),
+  activo boolean not null default true,
+  created_at timestamptz not null default now()
+);
 
 create table if not exists estudiantes (
   id uuid primary key default gen_random_uuid(),
@@ -37,10 +48,3 @@ create table if not exists predicciones (
   version_modelo varchar(32) not null,
   created_at timestamptz not null default now()
 );
-
--- El backend se conecta con la cadena del pooler (rol postgres) y no pasa
--- por RLS. RLS activado sin políticas impide leer estas tablas con la clave
--- pública (anon) desde el navegador: todo acceso va por la API.
-alter table estudiantes enable row level security;
-alter table registros enable row level security;
-alter table predicciones enable row level security;

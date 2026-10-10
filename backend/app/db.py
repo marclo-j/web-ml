@@ -1,7 +1,7 @@
 """Base de datos (docs/ARQUITECTURA.md → Modelo de datos).
 
-En producción es el PostgreSQL de Supabase (DATABASE_URL del connection
-pooler); en desarrollo y pruebas, SQLite. El esquema de producción se crea con
+En producción es PostgreSQL en Neon (DATABASE_URL con el host -pooler); en
+desarrollo y pruebas, SQLite. El esquema de producción se crea con
 sql/001_esquema.sql; create_all solo se usa con SQLite.
 """
 
@@ -10,6 +10,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     DateTime,
     Float,
@@ -36,6 +37,26 @@ def _ahora() -> datetime:
 
 class Base(DeclarativeBase):
     pass
+
+
+class Usuario(Base):
+    """Personal de la IE que usa la web (tutor o directivo). Solo correo, rol y
+    el hash de la contraseña (Argon2id); nunca la contraseña."""
+
+    __tablename__ = "usuarios"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(String(254), unique=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    rol: Mapped[str] = mapped_column(String(16))
+    activo: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_ahora
+    )
+
+    __table_args__ = (
+        CheckConstraint("rol IN ('tutor', 'directivo')", name="ck_usuarios_rol"),
+    )
 
 
 class Estudiante(Base):

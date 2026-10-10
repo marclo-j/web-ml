@@ -1,14 +1,17 @@
 # 🔌 API — Backend FastAPI
 
 Base URL local: `http://localhost:8000` · Documentación automática: `/docs` (Swagger)
-Autenticación: header `Authorization: Bearer <token de Supabase>` en todo excepto `/health`. Se aceptan tokens firmados con el secreto JWT del proyecto (HS256, `SUPABASE_JWT_SECRET`) o con sus claves asimétricas (JWKS en `SUPABASE_URL`). El rol (`tutor` / `directivo`) se lee de `app_metadata.rol`; por ahora todos los endpoints están abiertos a ambos roles.
+Autenticación propia (D10): `POST /auth/login` devuelve un token; enviarlo como `Authorization: Bearer <token>` en todo excepto `/health` y `/auth/login`. En `/docs`, el botón *Authorize* inicia sesión con correo y contraseña.
 
-Código: `backend/app/` (routers en `routers/`, fórmulas en `services/indicadores.py`, modelo en `services/modelo.py`). Pruebas: `backend/tests/` (28). Esquema de Supabase: `backend/sql/001_esquema.sql`.
+Código: `backend/app/` (routers en `routers/`, fórmulas en `services/indicadores.py`, modelo en `services/modelo.py`). Pruebas: `backend/tests/` (42). Esquema de la base (Neon): `backend/sql/001_esquema.sql`.
 
 ## Resumen
 | Método | Ruta | Descripción | Estado |
 |---|---|---|---|
 | GET | `/health` | Verifica que el servicio y el modelo cargaron | ✅ |
+| POST | `/auth/login` | Inicia sesión (correo + contraseña) → token | ✅ |
+| GET | `/auth/yo` | Usuario de la sesión (correo y rol) | ✅ |
+| POST | `/auth/cambiar-password` | Cambia la contraseña propia | ✅ |
 | POST | `/predecir` | Predicción directa sin guardar (demo/pruebas) | ✅ |
 | GET | `/estudiantes` | Lista estudiantes con su última predicción | ✅ |
 | POST | `/estudiantes` | Crea un estudiante | ✅ |
@@ -24,6 +27,22 @@ Código: `backend/app/` (routers en `routers/`, fórmulas en `services/indicador
 ```json
 { "status": "ok", "modelo": "rf_v3" }
 ```
+
+## POST `/auth/login`
+`application/x-www-form-urlencoded` (formulario OAuth2): `username` = correo, `password`.
+```json
+{
+  "access_token": "eyJ...", "token_type": "bearer", "expira_en": 28800,
+  "usuario": { "email": "tutor@ie.edu.pe", "rol": "tutor" }
+}
+```
+401 con el mismo mensaje si el correo no existe o la contraseña es incorrecta; 429 tras 5 intentos fallidos seguidos (bloqueo de 15 min).
+
+## POST `/auth/cambiar-password`
+```json
+{ "password_actual": "...", "password_nueva": "..." }
+```
+204 si se cambió; 400 si la actual no es correcta; 422 si la nueva tiene menos de 10 caracteres.
 
 ## POST `/predecir`
 Request (datos crudos, igual que las fichas):
@@ -109,9 +128,11 @@ _(valores de ejemplo, no resultados)_
 ## Errores
 | Código | Cuándo |
 |---|---|
-| 401 | Token ausente o inválido |
+| 401 | Token ausente, inválido o vencido; usuario desactivado; login incorrecto |
+| 403 | El rol no permite la acción (reservado para `requiere_rol`) |
 | 404 | Estudiante/registro inexistente |
 | 409 | Código de estudiante ya registrado |
 | 413 | CSV mayor a 1 MB |
+| 429 | Demasiados intentos de login fallidos |
 | 422 | Falla una regla de validación de `VARIABLES.md` (el mensaje indica cuál) |
 | 503 | Modelo no cargado |

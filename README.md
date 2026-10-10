@@ -7,7 +7,7 @@ Proyecto de tesis — Ingeniería de Sistemas, Universidad César Vallejo, 2026.
 ## Requisitos
 - Python 3.11+
 - Node.js 20+
-- Cuenta de Supabase (proyecto creado)
+- Proyecto de Neon (PostgreSQL) para producción; en desarrollo basta SQLite
 
 ## Inicio rápido
 
@@ -18,10 +18,9 @@ cp frontend/.env.example frontend/.env.local
 ```
 | Variable | Dónde | Descripción |
 |---|---|---|
-| `DATABASE_URL` | backend | Cadena del connection pooler de Supabase |
-| `SUPABASE_URL` | backend / frontend | URL del proyecto |
-| `SUPABASE_ANON_KEY` | frontend | Clave pública |
-| `SUPABASE_JWT_SECRET` | backend | Para validar tokens |
+| `DATABASE_URL` | backend | Cadena de Neon con *connection pooling* (host `-pooler`, `sslmode=require`). Vacío = SQLite local |
+| `JWT_SECRET` | backend | Secreto para firmar las sesiones (≥ 32 caracteres) |
+| `JWT_EXPIRA_MIN` | backend | Duración de la sesión (por defecto 480 min) |
 | `MODEL_PATH` | backend | ej. `ml/models/rf_v3.joblib` (relativo a la raíz del repo) |
 | `AUTH_DESACTIVADA` | backend | `1` solo en desarrollo local con SQLite (sin login) |
 | `NEXT_PUBLIC_API_URL` | frontend | ej. `http://localhost:8000` |
@@ -40,10 +39,11 @@ python train.py --data ../data/synthetic/historico.csv --version v0
 cd backend
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload    # http://localhost:8000/docs
+uvicorn app.main:crear_app --factory --reload    # http://localhost:8000/docs
+python -m app.crear_usuario --email tutor@ie.edu.pe --rol tutor   # pide la contraseña
 pytest                           # pruebas
 ```
-Sin `DATABASE_URL` usa SQLite (`backend/local.db`). Para Supabase: ejecutar `backend/sql/001_esquema.sql` en el SQL Editor y poner en `DATABASE_URL` la cadena del *Transaction pooler*.
+Sin `DATABASE_URL` usa SQLite (`backend/local.db`). Para Neon: ejecutar `backend/sql/001_esquema.sql` en el SQL Editor del proyecto y poner su cadena en `DATABASE_URL`. No hay registro público: los usuarios se crean con `app.crear_usuario` (también `--restablecer` y `--desactivar`).
 ```
 
 ### 4. Frontend

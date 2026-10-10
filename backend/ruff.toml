@@ -1,0 +1,3 @@
+[lint.flake8-bugbear]
+# Patrón estándar de FastAPI: las dependencias se declaran como valor por defecto
+extend-immutable-calls = ["fastapi.Depends", "fastapi.File", "fastapi.Query"]

@@ -14,6 +14,19 @@
 
 ---
 
+### 2026-10-10 — Fase 4: backend FastAPI
+**Tipo:** desarrollo
+**Qué se hizo:**
+- `backend/app/`: los 9 endpoints de `API.md`, SQLAlchemy (SQLite en desarrollo, PostgreSQL de Supabase en producción), autenticación con tokens de Supabase (HS256 o JWKS), carga masiva por CSV con exclusiones por fila, CORS. 28 pruebas (`backend/tests/`), con un modelo de prueba entrenado con datos inventados.
+- `services/indicadores.py` es copia de `calcular_indicadores` de `ml/preprocess.py`; una prueba compara ambas en 2000 casos aleatorios y en los errores.
+- Umbrales y versión se leen del `.json` del modelo: el backend usa siempre los del modelo con que predice.
+- `ml/train.py` ahora guarda el `RandomForestClassifier` sin el envoltorio `RFAumentado`: el backend no depende de `ml/aumento.py` y el `.joblib` no contiene sintéticos. `rf_v3` reentrenado: mismas predicciones.
+- Prueba de punta a punta (base temporal, borrada después): importar PRE 2026 v5 por CSV → 69 procesados, resumen control 27/7/1 y experimental 27/4/3, igual que la clasificación de Fase 3 (2 probabilidades difieren solo en el redondeo del 4.º decimal).
+**Decisiones tomadas:** un registro por alumno y momento (recargar reemplaza datos y predicción); `AUTH_DESACTIVADA=1` solo con SQLite; roles leídos pero aún sin restricciones por endpoint.
+**Pendientes derivados:** crear el proyecto de Supabase (autor), ejecutar `sql/001_esquema.sql` y completar `backend/.env`; definir si algún endpoint queda solo para `directivo`.
+
+---
+
 ### 2026-10-10 — Cierre de Fases 2 y 3
 **Tipo:** desarrollo
 **Qué se hizo:**

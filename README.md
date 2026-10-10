@@ -22,7 +22,8 @@ cp frontend/.env.example frontend/.env.local
 | `SUPABASE_URL` | backend / frontend | URL del proyecto |
 | `SUPABASE_ANON_KEY` | frontend | Clave pública |
 | `SUPABASE_JWT_SECRET` | backend | Para validar tokens |
-| `MODEL_PATH` | backend | ej. `../ml/models/rf_v1.joblib` |
+| `MODEL_PATH` | backend | ej. `ml/models/rf_v3.joblib` (relativo a la raíz del repo) |
+| `AUTH_DESACTIVADA` | backend | `1` solo en desarrollo local con SQLite (sin login) |
 | `NEXT_PUBLIC_API_URL` | frontend | ej. `http://localhost:8000` |
 
 ### 2. Modelo
@@ -37,9 +38,12 @@ python train.py --data ../data/synthetic/historico.csv --version v0
 ### 3. Backend
 ```bash
 cd backend
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload    # http://localhost:8000/docs
+pytest                           # pruebas
+```
+Sin `DATABASE_URL` usa SQLite (`backend/local.db`). Para Supabase: ejecutar `backend/sql/001_esquema.sql` en el SQL Editor y poner en `DATABASE_URL` la cadena del *Transaction pooler*.
 ```
 
 ### 4. Frontend

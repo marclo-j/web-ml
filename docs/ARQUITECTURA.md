@@ -98,6 +98,8 @@ erDiagram
 ```
 Se guardan los **datos crudos** (días, notas, reuniones) además de los indicadores calculados, para que cada valor sea trazable hasta su ficha.
 
+Restricciones: `codigo` único; un registro por alumno y momento (`unique (estudiante_id, momento)`); una predicción por registro (se actualiza si se vuelven a cargar los datos). Esquema: `backend/sql/001_esquema.sql` (con RLS activado sin políticas: solo la API accede a las tablas). El modelo que carga el backend es el `RandomForestClassifier` de sklearn (sin el envoltorio de aumento), con la misma versión de scikit-learn que `ml/` (1.9.1).
+
 ## Flujo principal
 1. El tutor registra (o carga por CSV) los datos crudos de un alumno.
 2. El backend valida y calcula los 3 indicadores con las fórmulas de la tesis.

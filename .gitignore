@@ -25,3 +25,6 @@ stats/output/
 
 # Temporales de Office
 ~$*
+
+# Base local de desarrollo del backend
+backend/local.db

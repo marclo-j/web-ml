@@ -249,7 +249,12 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     ruta_modelo = args.out / f"rf_{args.version}.joblib"
     ruta_json = args.out / f"rf_{args.version}.json"
-    joblib.dump(resultado["modelo"], ruta_modelo)
+    # Se guarda el RandomForestClassifier de sklearn sin el envoltorio de
+    # aumento: el backend no depende de ml/aumento.py y el .joblib no lleva
+    # los sintéticos (derivados de datos de menores). Predice exactamente igual.
+    joblib.dump(
+        getattr(resultado["modelo"], "modelo_", resultado["modelo"]), ruta_modelo
+    )
     ruta_json.write_text(
         json.dumps(resultado["metadatos"], ensure_ascii=False, indent=2),
         encoding="utf-8",

@@ -10,7 +10,7 @@
 | 1 | Fichas y recolección PRE | ✅ | 0 | 3 fichas + datos PRE de los 70 alumnos. Vigente: PRE 2026 v5 (2026-10-09, 3.° A control 35, 4.° B experimental 34, 1 excluido por traslado) |
 | 2 | Dataset de entrenamiento (etiquetado) | ✅ | 1 | `data/processed/2024_pre_v5.csv`: 70 alumnos (2024), 13 desertores; se completa con aumento SMOTE solo en entrenamiento (D8). 2025 descartado |
 | 3 | Entrenamiento y evaluación del modelo | ✅ | 2 | `rf_v3` (2024 + SMOTE): CV 5x5 sobre reales AUC 0.99, F1 0.91. Hiperparámetros iniciales (la búsqueda no mejora). Umbrales D9: 0.15 / 0.50 |
-| 4 | Backend (API) | ⬜ | 3 | FastAPI con predicción y CRUD |
+| 4 | Backend (API) | 🟨 | 3 | FastAPI con predicción y CRUD — implementado y probado; falta conectar el proyecto de Supabase |
 | 5 | Frontend (dashboard) | ⬜ | 4 | Web con listado de riesgo por alumno |
 | 6 | Despliegue e intervención | ⬜ | 5 | Web en producción, usada con grupo experimental |
 | 7 | Recolección POST | ⬜ | 6 | Datos POST de los 70 alumnos |
@@ -66,9 +66,11 @@
 **Qué decir:** "El modelo detecta a los desertores del histórico con AUC 0.99 evaluado solo sobre alumnos reales; la asistencia y la participación familiar son las dimensiones que más pesan. Los niveles bajo, medio y alto salen de las probabilidades del propio histórico."
 
 ### Fase 4 — Backend
-- [ ] Endpoints de `API.md` implementados
-- [ ] Conexión a Supabase
-- [ ] Cálculo de indicadores en el servidor (no en el cliente)
+- [x] Endpoints de `API.md` implementados (`backend/app/`, 28 pruebas) — 2026-10-10
+- [x] Cálculo de indicadores en el servidor (`services/indicadores.py`, idéntico a `ml/preprocess.py`, lo comprueba una prueba)
+- [x] Autenticación con tokens de Supabase (HS256 o JWKS)
+- [x] Prueba de punta a punta con `rf_v3`: importar PRE 2026 por CSV da el mismo resumen (27/7/1 y 27/4/3)
+- [ ] Conexión a Supabase: código y esquema listos (`sql/001_esquema.sql`); falta que el autor cree el proyecto y complete `backend/.env`
 
 ### Fase 5 — Frontend
 - [ ] Login simple para tutor/directivo

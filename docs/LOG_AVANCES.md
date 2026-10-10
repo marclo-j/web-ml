@@ -14,6 +14,20 @@
 
 ---
 
+### 2026-10-09 — PRE 2026 v5 vigente y clasificación con `rf_v3`
+**Tipo:** desarrollo
+**Qué se hizo:**
+- El autor aclaró que los 19 cambios de asistencia de PRE 2026 v5 provienen del registro de la IE (corrigió valores inconsistentes) y que `deserto` en 2026 fue un error de llenado. Se vació `deserto` en las 3 fichas 2026 (respaldo con la columna llena en `data/raw/_respaldos/2026_pre_v5_con_deserto/`).
+- `preprocess.py`: 69 incluidos (control 35 en 3.° A, experimental 34 en 4.° B), 1 excluido por traslado definitivo.
+- Normalidad (Shapiro-Wilk): promedio no normal en ambos (p < 0.001); asistencia no normal en control (p = 0.021), normal en experimental (p = 0.236); reuniones no normal en ambos (p < 0.001) → U de Mann-Whitney.
+- Equivalencia (U de Mann-Whitney): promedio p = 0.540, asistencia p = 0.449, reuniones p = 0.616. Grupos comparables.
+- Clasificación PRE con `rf_v3` y umbrales provisionales (0.33 / 0.66): control 32 / 3 / 0, experimental 28 / 3 / 3 (bajo / medio / alto).
+- CSV para SPSS: `data/processed/spss_pre2026_v5.csv` (con probabilidad y nivel).
+**Decisiones tomadas:** PRE 2026 v5 reemplaza a v4.
+**Pendientes derivados:** fijar umbrales finales de nivel; Fase 4 (backend).
+
+---
+
 ### 2026-10-09 — `rf_v3` y fichas PRE 2026 v5
 **Tipo:** desarrollo
 **Qué se hizo:**

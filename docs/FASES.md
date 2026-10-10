@@ -7,7 +7,7 @@
 | Fase | Nombre | Estado | Depende de | Entregable principal |
 |---|---|---|---|---|
 | 0 | Setup y documentación | ✅ | — | Repo con estructura y `/docs` |
-| 1 | Fichas y recolección PRE | ✅ | 0 | 3 fichas + datos PRE de los 70 alumnos. 2026-10-09: v4 (otras secciones) vigente; v5 en revisión (`deserto` lleno y asistencia de 19 alumnos ajustada en la dirección de `deserto`) |
+| 1 | Fichas y recolección PRE | ✅ | 0 | 3 fichas + datos PRE de los 70 alumnos. Vigente: PRE 2026 v5 (2026-10-09, 3.° A control 35, 4.° B experimental 34, 1 excluido por traslado) |
 | 2 | Dataset de entrenamiento (etiquetado) | ✅ | 1 | `data/processed/2024_pre_v5.csv`: 70 alumnos (2024), 13 desertores; se completa con aumento SMOTE solo en entrenamiento (D8). 2025 descartado |
 | 3 | Entrenamiento y evaluación del modelo | ✅ | 2 | `rf_v3` (2024 + SMOTE): CV 5x5 sobre reales AUC 0.99, F1 0.91. SMOTE vs CTGAN comparados (`comparar_aumento.py`). Falta fijar umbrales de nivel |
 | 4 | Backend (API) | ⬜ | 3 | FastAPI con predicción y CRUD |

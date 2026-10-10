@@ -12,6 +12,12 @@ estratificada k=5 sobre el 80%.
                       ver ml/etiquetar_umbral.py
   - sintetico        datos simulados (ml/generate_synthetic.py)
 
+--aumentar F (opcional, decisión D8): agrega F × n registros sintéticos solo a
+los datos de entrenamiento (ml/aumento.py), con --metodo-aumento smote
+(interpolación intra-clase, por defecto) o ctgan (red generativa adversarial).
+CV, holdout e importancia se miden siempre sobre alumnos reales. Los
+sintéticos del 80 % se guardan en data/processed/ para el anexo de la tesis.
+
 Solo "historico_real" puede citarse como resultado de la tesis. Con
 "opcion_b" o "sintetico" el script imprime y guarda una advertencia: son
 prueba de concepto del pipeline, no resultados (docs/MODELO.md).
@@ -19,6 +25,8 @@ prueba de concepto del pipeline, no resultados (docs/MODELO.md).
 Uso:
     python ml/train.py --data data/synthetic/historico.csv --version v0 --fuente sintetico
     python ml/train.py --data data/processed/2026_pre_opcion_b.csv --version v0b --fuente opcion_b
+    python ml/train.py --data data/processed/historico.csv --version v3 --fuente historico_real --aumentar 2
+    python ml/train.py --data data/processed/historico.csv --version v3g --fuente historico_real --aumentar 2 --metodo-aumento ctgan
 """
 
 import argparse
@@ -30,6 +38,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
+from aumento import K_VECINOS, METODOS, RFAumentado
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import (
@@ -41,6 +50,7 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import StratifiedKFold, cross_validate, train_test_split
 
+RAIZ = Path(__file__).resolve().parent.parent
 FEATURES = ["promedio", "pct_asistencia", "pct_reuniones"]
 TARGET = "deserto"
 
@@ -138,13 +148,34 @@ def distribucion_niveles(modelo, x_test) -> dict:
     return {n: niveles.count(n) for n in ("bajo", "medio", "alto")}
 
 
-def entrenar(ruta_datos: Path, fuente: str) -> dict:
+DESCRIPCION_METODO = {
+    "smote": "interpolación intra-clase (SMOTE), solo en entrenamiento",
+    "ctgan": "red generativa adversarial tabular (CTGAN), solo en entrenamiento",
+}
+
+
+def crear_modelo(aumentar: float, metodo: str = "smote"):
+    if aumentar > 0:
+        return RFAumentado(
+            factor=aumentar,
+            semilla=SEMILLA,
+            hiperparametros=HIPERPARAMETROS,
+            metodo=metodo,
+        )
+    return RandomForestClassifier(**HIPERPARAMETROS)
+
+
+def entrenar(
+    ruta_datos: Path, fuente: str, aumentar: float = 0, metodo: str = "smote"
+) -> dict:
+    if aumentar < 0:
+        raise SystemExit("[ERROR] --aumentar no puede ser negativo")
     x, y = cargar_datos(ruta_datos)
     x_train, x_test, y_train, y_test = train_test_split(
         x, y, test_size=PROPORCION_TEST, stratify=y, random_state=SEMILLA
     )
 
-    modelo = RandomForestClassifier(**HIPERPARAMETROS)
+    modelo = crear_modelo(aumentar, metodo)
     cv = validar_cruzada(modelo, x_train, y_train)
     modelo.fit(x_train, y_train)
     holdout = evaluar_holdout(modelo, x_test, y_test)
@@ -161,6 +192,16 @@ def entrenar(ruta_datos: Path, fuente: str) -> dict:
         "tasa_positivos": round(float(y.mean()), 4),
         "features": FEATURES,
         "hiperparametros": HIPERPARAMETROS,
+        "aumento": {
+            "factor": aumentar,
+            "metodo": metodo,
+            "descripcion": DESCRIPCION_METODO[metodo],
+            "k_vecinos": K_VECINOS if metodo == "smote" else None,
+            "n_sinteticos_en_train": int(getattr(modelo, "n_sinteticos_", 0)),
+            "metricas_sobre": "solo alumnos reales",
+        }
+        if aumentar > 0
+        else None,
         "validacion_cruzada_k5_sobre_train": cv,
         "holdout_20pct": holdout,
         "importancia_variables": importancias,
@@ -169,7 +210,11 @@ def entrenar(ruta_datos: Path, fuente: str) -> dict:
     }
     if fuente != "historico_real":
         metadatos["aviso"] = AVISO_NO_RESULTADO
-    return {"modelo": modelo, "metadatos": metadatos}
+    sinteticos = None
+    if aumentar > 0:
+        # Los mismos sintéticos con que se entrenó el modelo final (80 %)
+        sinteticos = modelo.sinteticos_
+    return {"modelo": modelo, "metadatos": metadatos, "sinteticos": sinteticos}
 
 
 def main() -> None:
@@ -185,6 +230,13 @@ def main() -> None:
     )
     parser.add_argument("--fuente", required=True, choices=FUENTES)
     parser.add_argument(
+        "--aumentar",
+        type=float,
+        default=0,
+        help="Sintéticos por alumno real, solo en entrenamiento (D8). 0 = sin aumento",
+    )
+    parser.add_argument("--metodo-aumento", choices=METODOS, default="smote")
+    parser.add_argument(
         "--out",
         type=Path,
         default=Path(__file__).resolve().parent / "models",
@@ -192,7 +244,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    resultado = entrenar(args.data, args.fuente)
+    resultado = entrenar(args.data, args.fuente, args.aumentar, args.metodo_aumento)
     args.out.mkdir(parents=True, exist_ok=True)
     ruta_modelo = args.out / f"rf_{args.version}.joblib"
     ruta_json = args.out / f"rf_{args.version}.json"
@@ -219,6 +271,15 @@ def main() -> None:
     print(
         "Importancia (permutación, f1):", m["importancia_variables"]["permutacion_f1"]
     )
+    if resultado["sinteticos"] is not None:
+        # Derivados de datos de menores: van a data/processed/ (gitignored)
+        ruta_sint = RAIZ / "data" / "processed" / f"sinteticos_rf_{args.version}.csv"
+        ruta_sint.parent.mkdir(parents=True, exist_ok=True)
+        resultado["sinteticos"].to_csv(ruta_sint, index=False)
+        print(
+            f"Aumento {args.metodo_aumento} x{args.aumentar}: {m['aumento']['n_sinteticos_en_train']} sintéticos"
+            f" en train; métricas sobre reales -> {ruta_sint}"
+        )
     print(f"[OK] {ruta_modelo}")
     print(f"[OK] {ruta_json}")
 

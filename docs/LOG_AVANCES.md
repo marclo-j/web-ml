@@ -14,6 +14,81 @@
 
 ---
 
+### 2026-10-09 — `rf_v3` y fichas PRE 2026 v5
+**Tipo:** desarrollo
+**Qué se hizo:**
+- Se eligió SMOTE (D8). `rf_v3` = 2024 v5 + SMOTE x2 solo en entrenamiento (112 sintéticos). Holdout (14 alumnos, 3 positivos): accuracy 0.93, precision 0.75, recall 1.00, F1 0.86, matriz [[10, 1], [0, 3]]. Métrica principal: CV 5x5 de `comparar_aumento.py` (ver entrada siguiente). Importancia por permutación: asistencia 0.42, reuniones 0.33, promedio ≈ 0.
+- PRE 2026 v5 (archivos `*_2026_1.xlsx`): `deserto` coincide entre fichas (12 alumnos con 1), pero sigue lleno, así que `preprocess.py` excluye a los 70. Respecto de v4, las notas no cambian; cambian los días asistidos de 19 alumnos y las reuniones de 6. Los 10 marcados como desertores que cambian bajan en promedio 22.3 días (de −8 a −37); los 9 no desertores que cambian suben 15.8 días (de +4 a +26).
+**Decisiones tomadas:** PRE 2026 v5 no se usa para clasificar ni para SPSS. La deserción 2026 es la variable de desenlace (D2) y se registra al cierre del periodo; los indicadores PRE son del I bimestre y no deben ajustarse según un desenlace posterior. Hasta que el autor aclare, se mantiene PRE 2026 v4 (`spss_pre2026_v4.csv`).
+**Pendientes derivados:** el autor explica el origen de los 19 cambios de asistencia y vacía `deserto` en las fichas 2026.
+
+---
+
+### 2026-10-09 — Fichas 2024 corregidas (v5) y CTGAN
+**Tipo:** desarrollo
+**Qué se hizo:**
+- El autor entregó fichas 2024 corregidas, con otros alumnos. Se descartan 2025 y la versión 2026 actual (el autor enviará una nueva de 2026). El histórico restante se generará a partir de 2024 con aumento (D8).
+- `preprocess.py`: 70 incluidos, 0 excluidos; `deserto` coincide en las 3 fichas. 13 desertores (18.6 %; control 6, experimental 7). Desertores frente a no desertores: promedio 10.95 vs 14.08 (MW p = 0.003), asistencia 23.6 % vs 67.3 % (p < 0.001), reuniones 0 % vs 49.1 % (p < 0.001).
+- Casi separación perfecta: "reuniones = 0 y asistencia ≤ 40 %" clasifica bien 68 de 70. Los desertores asistieron entre 1 y 18 de 45 días del I bimestre: posible fuga de información (D3) si ya habían dejado de asistir dentro del bimestre.
+- `aumento.py` admite `ctgan` además de `smote`; `ml/comparar_aumento.py` compara sin aumento, SMOTE y CTGAN con CV repetida evaluada solo sobre reales, más fidelidad (KS por clase). Se corrigió el orden de clases de `RFAumentado` (la AUC fallaba). 42 pruebas.
+- El autor confirmó que los desertores 2024 dejaron de asistir después del I bimestre (no hay fuga por D3).
+- `comparar_aumento.py` sobre 2024 v5 (n = 70, 13 positivos, factor 2, CV 5x5, prueba solo con reales). AUC / F1 / recall / precision: sin aumento 0.994 / 0.927 / 1.000 / 0.883; SMOTE 0.993 / 0.911 / 0.967 / 0.893; CTGAN 0.985 / 0.859 / 0.960 / 0.824 (desviación de F1 ≈ 0.12–0.16). Fidelidad KS: SMOTE ≤ 0.19 en ambas clases; CTGAN 0.23–0.73 (no reproduce la clase desertora con 13 casos).
+**Pendientes derivados:** elegir método para el modelo final (recomendado SMOTE: rinde igual que sin aumento y sus sintéticos se parecen a los reales; CTGAN se reporta como alternativa descartada).
+
+---
+
+### 2026-10-09 — Aumento de datos (D8) y SPSS PRE 2026 v4
+**Tipo:** desarrollo
+**Qué se hizo:**
+- PRE 2026 v4 procesado sobre una copia con `deserto` vaciado (las fichas en `data/raw/2026_pre/` siguen con `deserto` lleno): 69 incluidos (control 35, experimental 34), 1 excluido por traslado. Secciones: 3.° A y 4.° B. CSV para SPSS en `data/processed/spss_pre2026_v4.csv` (sin probabilidad ni nivel: el modelo aún no se reentrena).
+- Normalidad (Shapiro-Wilk): promedio no normal en ambos grupos (p < 0.001); asistencia no normal en control (p = 0.003) y normal en experimental (p = 0.106); reuniones no normal en ambos (p < 0.001) → U de Mann-Whitney.
+- Equivalencia (U de Mann-Whitney): promedio p = 0.540, asistencia p = 0.199, reuniones p = 0.730. Grupos comparables. Levene p > 0.7 en las 3.
+- `ml/aumento.py` + `train.py --aumentar` (5 pruebas nuevas, 39 en total).
+**Decisiones tomadas:** D8 (ver `MODELO.md`), según el autor avalada por el docente. Los años del histórico se mantienen rotulados como 2024 y 2025 por decisión del autor.
+**Pendientes derivados:** el autor corrige `deserto` en las fichas 2024–2025 (un valor por alumno, igual en las 3) y lo vacía en las fichas 2026; luego se reentrena con aumento y se rehacen los CSV de SPSS del histórico.
+
+---
+
+### 2026-10-09 — Cuarta versión de fichas (2024, 2025 y 2026) y revisión
+**Tipo:** desarrollo
+**Qué se hizo:** El autor reemplazó las fichas de 2024, 2025 y también de PRE 2026 (2026-10-09, 20:16–20:50), indicando que provienen de una reunión con un representante de la dirección de la IE. Se procesaron sin pisar versiones anteriores (`data/processed/*_v4*`). Hallazgos:
+1. `preprocess.py` excluye 38/70 (2024), 33/70 (2025) y 70/70 (2026), todos por `deserto`.
+2. `deserto` no coincide entre fichas: en 2024 solo 3 alumnos tienen 1 en las 3 fichas y 41 tienen al menos un 1; en 2025, 1 y 34.
+3. PRE 2026 trae `deserto` lleno en los 70 (30 con algún 1), dato que no puede conocerse antes del cierre del periodo (D2).
+4. Los indicadores no son correcciones de la versión anterior: cambian 69/70 promedios en 2024, 70/70 en 2025 y 68/69 en PRE 2026, con correlación ≈ 0 respecto a la versión previa (|Δ promedio| medio ≈ 3 puntos). En PRE 2026 la asistencia media pasa de 88.7 % a 64.1 %.
+**Aclaración del autor (2026-10-09):** el histórico se tomó de otros años lectivos, según lo pactado con el directivo para mantener el anonimato; PRE 2026 cambió porque se usan otras secciones. Los documentos fuente quedan entre la IE, el docente y el autor (no se suben al repo). Esto explica los hallazgos 4 y el cambio de PRE 2026.
+**Pendientes derivados:** corregir `deserto` para que sea un único valor por alumno igual en las 3 fichas (hallazgos 2) y dejarlo vacío en PRE 2026 (hallazgo 3); registrar en la metodología los años reales del histórico y las secciones de 2026. Mientras tanto, Fase 4 (backend) avanza con datos sintéticos.
+
+---
+
+### 2026-10-03 — Tercera versión de fichas 2024–2025 y `rf_v2`
+**Tipo:** desarrollo
+**Qué se hizo:** El autor volvió a llenar las fichas 2024–2025 (indicadores y `deserto`). Desaparece la correlación entre años (0.01). Resultado: 140 alumnos, 44 desertores (2024: 19, 27.1 %; 2025: 25, 35.7 %). `rf_v2` obtiene 1.00 en todas las métricas (CV 5x5, 25/25 pruebas) y un árbol de 2 niveles separa a todos sin error (promedio ≤ 12.05 y reuniones ≤ 75, o asistencia ≤ 56.67). Ningún desertor tiene reuniones > 50 % ni asistencia > 77.8 %.
+**Decisiones tomadas:** Separación perfecta = misma señal que `rf_v0b` (etiquetas que siguen una regla). `rf_v2` y sus métricas no se presentan ni se citan hasta contrastar las fichas con los documentos fuente.
+
+---
+
+### 2026-10-03 — Histórico 2024–2025 en validación
+**Tipo:** desarrollo
+**Qué se hizo:** Revisión de coherencia del histórico. 1) La tasa de las fichas (27 % / 26 %) contradecía la tendencia del problema (29 % → 35 %). 2) Mismo código en 2024 y 2025 con promedios casi iguales (correlación 0.52; esperado ≈ 0 ± 0.12 entre alumnos distintos), p. ej. EST-003 a EST-007 desertores ambos años. 3) Las fichas se crearon la noche del 2025-09-25, tras la negativa de la IE. El autor corrigió las fichas: solo cambió `deserto` (1 alumno en 2024, 7 en 2025) → 20/70 (28.6 %) y 25/70 (35.7 %); ningún indicador cambió y las anomalías 2) persisten.
+**Decisiones tomadas:** El histórico 2024–2025, `rf_v1`, sus métricas, la importancia de variables y la vista previa de niveles **no se presentan ni se citan** hasta contrastar las fichas con los registros fuente de la IE. Se presenta solo lo basado en PRE 2026 (equivalencia de grupos) y el pipeline. Ver `docs/avances/2026-10-03_prompt_correccion_design.md`.
+**Pendientes derivados:** validar el histórico con los documentos originales (nóminas, actas, retirados en SIAGIE); si no es posible, volver a la Opción B declarada como limitación.
+
+---
+
+### 2026-10-03 — Preparación del avance
+**Tipo:** desarrollo
+**Qué se hizo:**
+- Métricas de `rf_v1` (configuración inicial) con CV estratificada 5x5 sobre los 140: AUC 0.79 ± 0.08, accuracy 0.73 ± 0.05, precision 0.49 ± 0.09, recall 0.60 ± 0.20, F1 0.53 ± 0.11. Matriz (CV 5): [[79, 24], [16, 21]].
+- Importancia por permutación dentro de la CV (caída de AUC): promedio 0.19 ± 0.08, asistencia 0.08 ± 0.06, reuniones 0.05 ± 0.05. Sustituye a la del holdout (valores negativos, ruido).
+- Histórico, desertores vs no (Mann-Whitney): promedio p < 0.001, reuniones p = 0.024, asistencia p = 0.069.
+- Equivalencia PRE 2026 (control n=35, experimental n=34): promedio t p = 0.901; asistencia MW p = 0.355; reuniones MW p = 0.733. Grupos comparables.
+- Vista previa de niveles con umbrales provisionales: control 21/11/3, experimental 21/8/5 (bajo/medio/alto).
+- CSV para SPSS en `data/processed/spss_pre2026.csv` y `spss_historico.csv` (gitignored). Prompt del avance en `docs/avances/2026-10-03_prompt_avance.md`.
+**Pendientes derivados:** umbrales finales de nivel; Fase 4 (backend).
+
+---
+
 ### 2026-10-03 — Histórico real 2024–2025 procesado y `rf_v1`
 **Confirmación:** la IE confirmó el criterio de `deserto` (2026-10-03).
 **Corrección de fichas (autor):** los 37 alumnos con `deserto` parcial (`data/processed/deserto_a_corregir.csv`) quedaron con 1 en las 3 fichas. Con la regla estricta se obtienen los mismos 140 alumnos, 37 desertores e indicadores idénticos a D7. Las fichas originales no se respaldaron antes de editarlas.

@@ -43,6 +43,14 @@ Script: `ml/etiquetar_umbral.py --entrada data/processed/2026_pre.csv --salida d
 
 **Datos sintéticos:** `ml/generate_synthetic.py` genera datos con la misma estructura solo para validar que el pipeline funciona. Nunca se reportan como resultados.
 
+**Aumento de datos del histórico (decisión D8, 2026-10-09, avalada por el docente según el autor):** `ml/train.py --aumentar F` agrega F × n registros sintéticos a partir de las fichas históricas reales (`ml/aumento.py`), con `--metodo-aumento smote` (interpolación intra-clase [Chawla et al., 2002]) o `ctgan` (red generativa adversarial tabular [Xu et al., 2019], lo que sugirió el docente). `ml/comparar_aumento.py` compara sin aumento, SMOTE y CTGAN con la misma CV repetida evaluada sobre reales, más la fidelidad de los sintéticos (KS por clase); se reporta el método elegido con esa evidencia. Reglas:
+- El aumento se aplica solo al entrenamiento (cada partición de la CV y el 80 % del holdout). CV, holdout, matriz de confusión e importancia de variables se calculan solo sobre alumnos reales; evaluar sobre sintéticos inflaría las métricas.
+- Se conserva la proporción de desertores y el rango de cada indicador.
+- En la tesis se declara en Metodología (técnica, factor y n reales / n sintéticos) y en Limitaciones. Los sintéticos de cada corrida quedan en `data/processed/sinteticos_rf_<versión>.csv` para el anexo; nunca se presentan como registros de la IE.
+- El aumento no corrige etiquetas: `deserto` del histórico real tiene que estar resuelto antes (un valor por alumno, igual en las 3 fichas).
+- Falta agregar las referencias de SMOTE (Chawla et al., 2002) y CTGAN (Xu et al., 2019) a la lista IEEE de la tesis al redactar Metodología.
+- Base real (2026-10-09): solo 2024 v5 (70 alumnos, 13 desertores); 2025 se descarta. El histórico se completa con aumento, no con un año ficticio.
+
 ## Configuración inicial
 ```python
 RandomForestClassifier(
@@ -97,6 +105,7 @@ ml/.venv/Scripts/python ml/train.py --data <csv_con_indicadores_y_deserto> --ver
 |---|---|---|---|---|---|---|---|---|
 | rf_v0 | 2026-09-25 | sintéticos (300, histórico simulado con ruido) | 300 | 0.42 | 0.24 | 0.35 | 0.29 | Solo prueba de pipeline; el generador agrega ruido a propósito, no se espera buen desempeño |
 | rf_v0b | 2026-09-25 | PRE 2026 real (69 alumnos) + Opción B (umbral) | 69 | 1.00 | 1.00 | 1.00 | 1.00 | **No es resultado.** Confirma la advertencia de la Opción B: el modelo reproduce la regla de etiquetado, no aprende deserción real |
+| rf_v3 | 2026-10-09 | Histórico 2024 v5 (70 alumnos, 13 desertores) + SMOTE x2 solo en entrenamiento (D8) | 70 | 0.93 | 0.75 | 1.00 | 0.86 | Holdout de 14 alumnos (3 positivos), inestable. Métrica principal: CV 5x5 sobre reales de `comparar_aumento.py` con SMOTE: AUC 0.993 ± 0.02, F1 0.911 ± 0.13, recall 0.967 ± 0.12, precision 0.893 ± 0.18, accuracy 0.966 ± 0.05. Importancia (permutación, holdout): asistencia 0.42, reuniones 0.33, promedio ≈ 0 |
 
 Cada versión se guarda como `ml/models/rf_vN.joblib` + `rf_vN.json` (features, hiperparámetros, CV, holdout, matriz de confusión, importancia de variables, fecha, umbrales; con aviso si `fuente_datos` ≠ `historico_real`). No versionados (`ml/models/` solo tiene el `.gitkeep`).
 

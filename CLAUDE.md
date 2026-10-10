@@ -18,6 +18,7 @@ Proyecto de tesis (Ingeniería de Sistemas, UCV). Web que clasifica el **nivel d
 ## Reglas no negociables
 - **Datos reales nunca se commitean.** `data/raw/` y `data/processed/` están en `.gitignore`. Son datos de menores (Ley N.° 29733). Solo se usan códigos anonimizados (`EST-001`).
 - **Datos sintéticos (`data/synthetic/`) solo sirven para probar el pipeline.** Jamás se reportan en Resultados ni en slides como hallazgos.
+- **Aumento del histórico (D8, `--aumentar`)**: solo en entrenamiento, métricas siempre sobre alumnos reales, y declarado en Metodología y Limitaciones (ver `docs/MODELO.md`).
 - **Las fórmulas son las de la tesis** (ver `docs/VARIABLES.md`). No inventar indicadores nuevos sin registrarlo como decisión.
 - Toda decisión técnica o metodológica nueva → se anota en el doc correspondiente y en `docs/LOG_AVANCES.md`.
 - Al cerrar una sesión de trabajo → actualizar estado en `docs/FASES.md`.

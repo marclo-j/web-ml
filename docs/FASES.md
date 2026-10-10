@@ -7,9 +7,9 @@
 | Fase | Nombre | Estado | Depende de | Entregable principal |
 |---|---|---|---|---|
 | 0 | Setup y documentación | ✅ | — | Repo con estructura y `/docs` |
-| 1 | Fichas y recolección PRE | ✅ | 0 | 3 fichas + datos PRE de los 70 alumnos |
-| 2 | Dataset de entrenamiento (etiquetado) | 🟨 | 1 | `data/processed/historico.csv`: 140 alumnos (2024–2025), 37 desertores. Regla de `deserto` (D7) confirmada con la IE el 2026-10-03 |
-| 3 | Entrenamiento y evaluación del modelo | 🟨 | 2 | `rf_v1.joblib` + métricas — pipeline listo, corridas de prueba hechas, falta el histórico real |
+| 1 | Fichas y recolección PRE | ✅ | 0 | 3 fichas + datos PRE de los 70 alumnos. 2026-10-09: v4 (otras secciones) vigente; v5 en revisión (`deserto` lleno y asistencia de 19 alumnos ajustada en la dirección de `deserto`) |
+| 2 | Dataset de entrenamiento (etiquetado) | ✅ | 1 | `data/processed/2024_pre_v5.csv`: 70 alumnos (2024), 13 desertores; se completa con aumento SMOTE solo en entrenamiento (D8). 2025 descartado |
+| 3 | Entrenamiento y evaluación del modelo | ✅ | 2 | `rf_v3` (2024 + SMOTE): CV 5x5 sobre reales AUC 0.99, F1 0.91. SMOTE vs CTGAN comparados (`comparar_aumento.py`). Falta fijar umbrales de nivel |
 | 4 | Backend (API) | ⬜ | 3 | FastAPI con predicción y CRUD |
 | 5 | Frontend (dashboard) | ⬜ | 4 | Web con listado de riesgo por alumno |
 | 6 | Despliegue e intervención | ⬜ | 5 | Web en producción, usada con grupo experimental |

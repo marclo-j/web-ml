@@ -10,7 +10,7 @@
 | 1 | Fichas y recolección PRE | ✅ | 0 | 3 fichas + datos PRE de los 70 alumnos. Vigente: PRE 2026 v5 (2026-10-09, 3.° A control 35, 4.° B experimental 34, 1 excluido por traslado) |
 | 2 | Dataset de entrenamiento (etiquetado) | ✅ | 1 | `data/processed/2024_pre_v5.csv`: 70 alumnos (2024), 13 desertores; se completa con aumento SMOTE solo en entrenamiento (D8). 2025 descartado |
 | 3 | Entrenamiento y evaluación del modelo | ✅ | 2 | `rf_v3` (2024 + SMOTE): CV 5x5 sobre reales AUC 0.99, F1 0.91. Hiperparámetros iniciales (la búsqueda no mejora). Umbrales D9: 0.15 / 0.50 |
-| 4 | Backend (API) | 🟨 | 3 | FastAPI con predicción, CRUD y autenticación propia — implementado y probado; falta conectar la base de Neon |
+| 4 | Backend (API) | ✅ | 3 | FastAPI con predicción, CRUD y autenticación propia, conectado a Neon. Falta crear usuarios |
 | 5 | Frontend (dashboard) | ⬜ | 4 | Web con listado de riesgo por alumno |
 | 6 | Despliegue e intervención | ⬜ | 5 | Web en producción, usada con grupo experimental |
 | 7 | Recolección POST | ⬜ | 6 | Datos POST de los 70 alumnos |
@@ -70,7 +70,8 @@
 - [x] Cálculo de indicadores en el servidor (`services/indicadores.py`, idéntico a `ml/preprocess.py`, lo comprueba una prueba)
 - [x] Autenticación propia (D10): Argon2id + JWT, bloqueo por intentos, usuarios por CLI (`app.crear_usuario`)
 - [x] Prueba de punta a punta con `rf_v3`: importar PRE 2026 por CSV da el mismo resumen (27/7/1 y 27/4/3)
-- [ ] Conexión a Neon: código y esquema listos (`sql/001_esquema.sql`); falta que el autor cree el proyecto, ejecute el esquema, complete `backend/.env` y cree los usuarios
+- [x] Conexión a Neon verificada (2026-10-10): PostgreSQL 18.6, pooler + SSL, 4 tablas con todas sus columnas; escritura de prueba deshecha
+- [ ] Crear los usuarios (autor, `python -m app.crear_usuario`)
 
 ### Fase 5 — Frontend
 - [ ] Login simple para tutor/directivo (contra `POST /auth/login`)

@@ -22,7 +22,8 @@
 - Tabla `usuarios` en `db.py` y `sql/001_esquema.sql`; se quitó el bloque RLS (era para la API pública de Supabase). Configuración: `JWT_SECRET`, `JWT_EXPIRA_MIN`; fuera `SUPABASE_URL` y `SUPABASE_JWT_SECRET`. La app se crea con `uvicorn app.main:crear_app --factory`.
 - 42 pruebas (14 de autenticación).
 **Decisiones tomadas:** D10 (Neon + autenticación propia).
-**Pendientes derivados:** el autor crea el proyecto de Neon, ejecuta `sql/001_esquema.sql`, completa `backend/.env` y crea los usuarios; definir restricciones por rol.
+**Pendientes derivados:** el autor crea los usuarios; definir restricciones por rol.
+**Actualización (2026-10-10):** el autor creó el proyecto de Neon (rama production, pooler, SSL + channel binding), ejecutó el esquema y completó `backend/.env` (gitignored). Verificado sin exponer credenciales: PostgreSQL 18.6, 4 tablas completas y vacías, `/health` ok con `rf_v3`, escritura de prueba en transacción deshecha.
 
 ---
 

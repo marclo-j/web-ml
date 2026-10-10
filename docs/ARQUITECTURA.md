@@ -21,7 +21,7 @@ flowchart LR
 | Backend | FastAPI + Uvicorn | Mismo lenguaje que el modelo; carga el `.joblib` sin puentes |
 | Base de datos | Neon (PostgreSQL) | Gestionado, capa gratuita; decisión D10 (2026-10-10) |
 | Autenticación | Propia del backend: Argon2id + JWT (PyJWT) | Sin servicios externos (D10); ver "Seguridad y privacidad" |
-| Frontend | Next.js (App Router) + TypeScript + Tailwind | Dashboard rápido de construir |
+| Frontend | Next.js 16 (App Router) + TypeScript + Tailwind 4 | Dashboard rápido de construir |
 | Deploy | Vercel (frontend), Render (backend) | Capas gratuitas suficientes para el piloto |
 
 > Conexión Render → Neon: usar la cadena con **connection pooling** (host terminado en `-pooler`) y `sslmode=require`. Neon suspende la base sin uso; la primera consulta tras la pausa tarda unos cientos de ms más.
@@ -55,9 +55,10 @@ web-ml/
 │   │   └── db.py
 │   └── requirements.txt
 └── frontend/
-    ├── app/
-    ├── components/
-    └── lib/api.ts
+    ├── app/               # (panel)/ páginas con sesión, login/, acciones.ts
+    ├── components/        # formularios (cliente) y ui.tsx
+    ├── lib/               # api.ts, sesion.ts, tipos.ts
+    └── proxy.ts
 ```
 
 ## Modelo de datos (Neon)
@@ -107,6 +108,12 @@ erDiagram
 Se guardan los **datos crudos** (días, notas, reuniones) además de los indicadores calculados, para que cada valor sea trazable hasta su ficha.
 
 Restricciones: `codigo` único; un registro por alumno y momento (`unique (estudiante_id, momento)`); una predicción por registro (se actualiza si se vuelven a cargar los datos). Esquema: `backend/sql/001_esquema.sql`; solo el backend se conecta a la base. El modelo que carga el backend es el `RandomForestClassifier` de sklearn (sin el envoltorio de aumento), con la misma versión de scikit-learn que `ml/` (1.9.1).
+
+## Frontend (`frontend/`)
+- **Backend for Frontend:** el navegador solo habla con Next.js. Las páginas (Server Components) y los formularios (Server Actions, `app/acciones.ts`) llaman al backend desde el servidor (`lib/api.ts`), así que `API_URL` no se expone y no hace falta CORS en producción.
+- **Sesión:** el token del backend se guarda en la cookie `sesion` (`httpOnly`, `secure` en producción, `sameSite=lax`): el JavaScript del navegador no puede leerla. `proxy.ts` redirige a `/login` si no hay cookie; la validación real la hace el backend en cada llamada (401 → `/login?expirada=1`).
+- Sin `cacheComponents`: todas las páginas son privadas y se renderizan por petición.
+- Rutas: `/login`, `/` (resumen por grupo y nivel + filtros + tabla), `/estudiantes/[id]`, `/registrar`, `/importar`, `/modelo`, `/cuenta`. Colores de nivel según `MODELO.md`, siempre con el texto del nivel.
 
 ## Flujo principal
 1. El tutor registra (o carga por CSV) los datos crudos de un alumno.

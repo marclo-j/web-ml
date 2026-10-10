@@ -14,6 +14,18 @@
 
 ---
 
+### 2026-10-10 — Fase 5: frontend Next.js
+**Tipo:** desarrollo
+**Qué se hizo:**
+- `frontend/` con Next.js 16.4, React 19, TypeScript y Tailwind 4. Patrón Backend for Frontend: todas las llamadas a la API salen del servidor de Next.js; el token va en una cookie `httpOnly` (verificado: `document.cookie` no la ve). `proxy.ts` protege las rutas.
+- Páginas: login, estudiantes (resumen por grupo y nivel, filtros por grupo/momento/nivel, tabla con color), detalle por alumno, registrar (crea el alumno si no existe y calcula el riesgo), importar CSV (detalle de excluidos), modelo (umbrales, CV 5x5, matriz de confusión) y cuenta (cambio de contraseña).
+- Se desactivó `cacheComponents` (venía en la plantilla): todas las páginas dependen de la sesión.
+- Prueba en el navegador contra un backend local (puerto 8100, SQLite temporal, usuario de prueba, `data/synthetic/carga_prueba.csv`), sin tocar Neon. Todo el flujo correcto, sin errores de consola. Se corrigió la cabecera en móvil. Base temporal y credenciales de prueba borradas al terminar.
+- `npm run lint` y `npm run build` sin errores. Dependencias de producción: 0 vulnerabilidades.
+**Pendientes derivados:** Fase 6 (despliegue en Render y Vercel); decidir restricciones por rol.
+
+---
+
 ### 2026-10-10 — Neon y autenticación propia (D10)
 **Tipo:** desarrollo
 **Qué se hizo:**

@@ -11,7 +11,7 @@
 | 2 | Dataset de entrenamiento (etiquetado) | ✅ | 1 | `data/processed/2024_pre_v5.csv`: 70 alumnos (2024), 13 desertores; se completa con aumento SMOTE solo en entrenamiento (D8). 2025 descartado |
 | 3 | Entrenamiento y evaluación del modelo | ✅ | 2 | `rf_v3` (2024 + SMOTE): CV 5x5 sobre reales AUC 0.99, F1 0.91. Hiperparámetros iniciales (la búsqueda no mejora). Umbrales D9: 0.15 / 0.50 |
 | 4 | Backend (API) | ✅ | 3 | FastAPI con predicción, CRUD y autenticación propia, conectado a Neon. Falta crear usuarios |
-| 5 | Frontend (dashboard) | ⬜ | 4 | Web con listado de riesgo por alumno |
+| 5 | Frontend (dashboard) | ✅ | 4 | Next.js 16: listado de riesgo por alumno, registro, CSV, detalle y modelo |
 | 6 | Despliegue e intervención | ⬜ | 5 | Web en producción, usada con grupo experimental |
 | 7 | Recolección POST | ⬜ | 6 | Datos POST de los 70 alumnos |
 | 8 | Análisis estadístico | ⬜ | 7 | Tablas de normalidad, contraste y métricas |
@@ -74,10 +74,12 @@
 - [ ] Crear los usuarios (autor, `python -m app.crear_usuario`)
 
 ### Fase 5 — Frontend
-- [ ] Login simple para tutor/directivo (contra `POST /auth/login`)
-- [ ] Tabla de alumnos con nivel de riesgo y color
-- [ ] Formulario de registro + carga masiva por CSV
-- [ ] Vista de detalle por alumno (sus 3 indicadores)
+- [x] Login simple para tutor/directivo (contra `POST /auth/login`, sesión en cookie httpOnly)
+- [x] Tabla de alumnos con nivel de riesgo y color + resumen por grupo y filtros
+- [x] Formulario de registro + carga masiva por CSV (con detalle de excluidos)
+- [x] Vista de detalle por alumno (sus 3 indicadores con fórmula y datos crudos)
+- [x] Extra: página del modelo (umbrales, CV 5x5, matriz de confusión) y cambio de contraseña
+- [x] Probado en el navegador (2026-10-10) contra un backend local con SQLite temporal y datos sintéticos: login (error y éxito), importación (20 procesados, 2 excluidos), registro de un caso alto, detalle, modelo, filtros, vista móvil, salir
 
 **Qué decir (4 + 5):** Demo en vivo del flujo: se cargan los datos de un alumno → la web calcula los indicadores → el modelo devuelve el nivel de riesgo.
 

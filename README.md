@@ -23,7 +23,7 @@ cp frontend/.env.example frontend/.env.local
 | `JWT_EXPIRA_MIN` | backend | Duración de la sesión (por defecto 480 min) |
 | `MODEL_PATH` | backend | ej. `ml/models/rf_v3.joblib` (relativo a la raíz del repo) |
 | `AUTH_DESACTIVADA` | backend | `1` solo en desarrollo local con SQLite (sin login) |
-| `NEXT_PUBLIC_API_URL` | frontend | ej. `http://localhost:8000` |
+| `API_URL` | frontend | URL del backend, ej. `http://localhost:8000` (solo la usa el servidor de Next.js) |
 
 ### 2. Modelo
 ```bash
@@ -50,8 +50,10 @@ Sin `DATABASE_URL` usa SQLite (`backend/local.db`). Para Neon: ejecutar `backend
 ```bash
 cd frontend
 npm install
-npm run dev                      # http://localhost:3000
+npm run dev                      # http://localhost:3000 (con el backend en marcha)
+npm run lint && npm run build    # verificación
 ```
+Páginas: login, estudiantes (resumen por grupo y nivel, filtros, tabla), detalle por alumno, registrar, importar CSV, modelo y cuenta.
 
 ## Documentación
 Todo en [`/docs`](docs/). Empezar por [`FASES.md`](docs/FASES.md) y [`CONTEXTO.md`](docs/CONTEXTO.md).

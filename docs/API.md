@@ -92,7 +92,7 @@ Response: el registro con indicadores calculados + la predicción creada.
   "version": "rf_v1", "entrenado": "2026-10-05",
   "features": ["promedio", "pct_asistencia", "pct_reuniones"],
   "metricas": { "accuracy": 0.0, "precision": 0.0, "recall": 0.0, "f1": 0.0 },
-  "umbrales": { "medio": 0.33, "alto": 0.66 }
+  "umbrales": { "medio": 0.15, "alto": 0.50 }
 }
 ```
 _(valores de ejemplo, no resultados)_

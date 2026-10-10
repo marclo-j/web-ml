@@ -9,7 +9,7 @@
 | 0 | Setup y documentación | ✅ | — | Repo con estructura y `/docs` |
 | 1 | Fichas y recolección PRE | ✅ | 0 | 3 fichas + datos PRE de los 70 alumnos. Vigente: PRE 2026 v5 (2026-10-09, 3.° A control 35, 4.° B experimental 34, 1 excluido por traslado) |
 | 2 | Dataset de entrenamiento (etiquetado) | ✅ | 1 | `data/processed/2024_pre_v5.csv`: 70 alumnos (2024), 13 desertores; se completa con aumento SMOTE solo en entrenamiento (D8). 2025 descartado |
-| 3 | Entrenamiento y evaluación del modelo | ✅ | 2 | `rf_v3` (2024 + SMOTE): CV 5x5 sobre reales AUC 0.99, F1 0.91. SMOTE vs CTGAN comparados (`comparar_aumento.py`). Falta fijar umbrales de nivel |
+| 3 | Entrenamiento y evaluación del modelo | ✅ | 2 | `rf_v3` (2024 + SMOTE): CV 5x5 sobre reales AUC 0.99, F1 0.91. Hiperparámetros iniciales (la búsqueda no mejora). Umbrales D9: 0.15 / 0.50 |
 | 4 | Backend (API) | ⬜ | 3 | FastAPI con predicción y CRUD |
 | 5 | Frontend (dashboard) | ⬜ | 4 | Web con listado de riesgo por alumno |
 | 6 | Despliegue e intervención | ⬜ | 5 | Web en producción, usada con grupo experimental |
@@ -45,20 +45,25 @@
 
 ### Fase 2 — Dataset de entrenamiento
 - [x] Solicitar a la IE registros de 2024–2025 con desenlace conocido → **se negó** (2026-09-25); se sigue insistiendo en paralelo
-- [ ] Limpiar, anonimizar y consolidar en `data/processed/historico.csv` (bloqueado hasta conseguir el histórico real)
-- [ ] Documentar tamaño, balance de clases y exclusiones en `MODELO.md`
+- [x] Limpiar, anonimizar y consolidar en `data/processed/historico.csv` → 2024 v5, 70 alumnos, 13 desertores, 0 excluidos (2026-10-10)
+- [x] Documentar tamaño, balance de clases y exclusiones en `MODELO.md` ("Histórico final") + `spss_historico_v5.csv`
+- [x] Aumento de datos D8 (SMOTE elegido frente a CTGAN con `comparar_aumento.py`)
 - [x] Mientras tanto: `ml/etiquetar_umbral.py` etiqueta por Opción B (umbral) sobre los datos PRE 2026 reales, declarado como limitación
 
-**Qué decir:** "El modelo es supervisado: aprende de alumnos de años anteriores cuyo desenlace ya se conoce. La IE aún no me entrega ese histórico, así que valido el pipeline con dos fuentes que declaro explícitamente como no-resultado: datos sintéticos y un etiquetado por umbrales de la literatura."
+**Qué decir:** "El modelo es supervisado: aprende de 70 alumnos de 2024 cuyo desenlace ya se conoce (13 desertaron). Como la muestra es pequeña, se completó el entrenamiento con datos sintéticos generados por SMOTE, y el modelo se evalúa solo con alumnos reales."
 
 ### Fase 3 — Modelo
 - [x] Script `ml/train.py` con validación cruzada estratificada k=5 + holdout 80/20
 - [x] Métricas: accuracy, precision, recall, F1 + matriz de confusión
 - [x] Importancia de variables (MDI y permutación; sustenta OE1–OE3)
-- [x] `rf_v1` entrenado con el histórico real (2026-10-03): CV F1 0.63 ± 0.09, pero holdout F1 0.38 (n=28, 7 positivos). Métrica inestable; falta registrarlo en `MODELO.md` y ajustar hiperparámetros
+- [x] ~~`rf_v1` (2026-10-03)~~ descartado junto con el histórico 2024–2025
+- [x] Comparación de aumento SMOTE vs CTGAN vs sin aumento (`comparar_aumento.py`) → SMOTE
+- [x] `rf_v3` = 2024 + SMOTE x2: CV 5x5 sobre reales AUC 0.993, F1 0.911, recall 0.967 (registrado en `MODELO.md`)
+- [x] Ajuste de hiperparámetros con CV anidada + SMOTE (`tune.py --aumentar 2`): sin mejora, se mantiene la configuración inicial
+- [x] Umbrales finales de nivel (D9): bajo < 0.15 ≤ medio < 0.50 ≤ alto
 - [x] Corridas de prueba: `rf_v0` (sintético) y `rf_v0b` (Opción B, real PRE 2026) — ver `MODELO.md`, ninguna es resultado de tesis
 
-**Qué decir:** "Estas son las métricas del modelo y el peso de cada dimensión en la predicción."
+**Qué decir:** "El modelo detecta a los desertores del histórico con AUC 0.99 evaluado solo sobre alumnos reales; la asistencia y la participación familiar son las dimensiones que más pesan. Los niveles bajo, medio y alto salen de las probabilidades del propio histórico."
 
 ### Fase 4 — Backend
 - [ ] Endpoints de `API.md` implementados

@@ -14,12 +14,33 @@
 ## Datos de entrenamiento
 | Opción | Descripción | Estado |
 |---|---|---|
-| ✅ **A (preferida)** | Alumnos de 2024–2025 con desenlace conocido. La IE reporta 29 % y 35 % de deserción esos años, por lo que el registro existe | 🟨 Fichas 2024 y 2025 de la IE recibidas (70 + 70 alumnos); `deserto` reconciliado con la regla D7 → 140 alumnos, 37 desertores (26.4 %). Entrenado `rf_v1` |
-| ⚠️ B (respaldo, en uso para el avance) | Etiquetar por reglas de umbral tomadas de la literatura, sobre los datos PRE 2026 reales (69 alumnos) | 🟨 En uso — `ml/etiquetar_umbral.py` → `rf_v0b` |
+| ✅ **A (en uso)** | Alumnos de años anteriores con desenlace conocido, entregados por la IE | ✅ Histórico 2024 v5 (70 alumnos, 13 desertores) + aumento SMOTE solo en entrenamiento (D8). Ver "Histórico final". Las versiones anteriores (2024–2025, `rf_v1`/`rf_v2`) se descartaron (ver `LOG_AVANCES.md`) |
+| ⚠️ B (respaldo, ya no se usa) | Etiquetar por reglas de umbral tomadas de la literatura, sobre los datos PRE 2026 reales (69 alumnos) | Solo prueba de pipeline — `ml/etiquetar_umbral.py` → `rf_v0b` |
 
 > ⚠️ Con la opción B el modelo solo aprende a reproducir las reglas con que se etiquetó. Las métricas saldrían altas pero no demostrarían capacidad predictiva real. Si se usa, debe declararse como limitación en la tesis.
 >
 > **Esto se confirmó empíricamente**, no solo en teoría: `rf_v0b` (abajo) dio accuracy = 1.0 en el holdout. Es la prueba de que el modelo aprendió la regla de umbral, no un patrón de deserción real — el motivo exacto por el que la Opción A sigue siendo necesaria.
+
+### Histórico final (2024 v5, 2026-10-09)
+Archivo: `data/processed/historico.csv` (copia de `2024_pre_v5.csv`; la versión anterior de 140 alumnos quedó en `historico_v1_2024_2025.csv`). CSV para SPSS: `spss_historico_v5.csv`.
+
+| Aspecto | Valor |
+|---|---|
+| Fuente | Fichas 2024 de la IE (I bimestre, mismo corte que PRE 2026, D3) |
+| Registros / incluidos / excluidos | 70 / 70 / 0 (sin traslados, dimensiones incompletas ni registros inconsistentes) |
+| Desertores | 13 (18.6 %): 3.° A 6 de 35, 4.° B 7 de 35 |
+| Balance | 57 : 13 (≈ 4.4 : 1) → `class_weight="balanced"` + SMOTE x2 en entrenamiento (D8) |
+| Datos crudos | 10 notas por alumno, 45 días programados, 2 reuniones programadas (iguales para todos) |
+
+Desertores frente a no desertores (mediana y RIC; U de Mann-Whitney, porque al menos un grupo no es normal en cada indicador; r = correlación biserial de rangos):
+
+| Indicador | Desertó (n = 13) | No desertó (n = 57) | U | p | r |
+|---|---|---|---|---|---|
+| Promedio | 10.60 (8.80–12.60) | 14.80 (11.90–16.20) | 170.5 | 0.003 | 0.54 |
+| % asistencia | 28.89 (17.78–33.33) | 64.44 (57.78–86.67) | 32.5 | < 0.001 | 0.91 |
+| % reuniones | 0.00 (0.00–0.00) | 50.00 (0.00–100.00) | 110.5 | < 0.001 | 0.70 |
+
+Limitaciones a declarar: un solo año lectivo y 13 casos positivos; la tasa de la muestra (18.6 %) es menor que la institucional de la realidad problemática (29 % y 35 %); las clases están casi separadas por asistencia y reuniones, por lo que las métricas son cercanas al techo y la validación externa real es el desenlace 2026 (D2).
 
 ### Umbrales de la Opción B
 Un alumno se etiqueta `deserto = 1` (en riesgo, solo para entrenar) si cumple **cualquiera** de estas 3 reglas — no son inventadas, cada una tiene una fuente:
@@ -63,9 +84,12 @@ RandomForestClassifier(
 ```
 Búsqueda de hiperparámetros (opcional, grilla pequeña por el tamaño de datos): `n_estimators` ∈ {100, 200, 400}, `max_depth` ∈ {None, 3, 5, 8}, `min_samples_leaf` ∈ {1, 2, 4}.
 
+**Resultado (2026-10-10, `ml/tune.py --aumentar 2`, CV anidada 5x2 externa / 5 interna, SMOTE dentro de cada partición de entrenamiento):** la búsqueda no mejora la configuración inicial (ambas: AUC 0.993 ± 0.015, F1 0.899 ± 0.134, recall 0.95 ± 0.15, precision 0.892 ± 0.175, accuracy 0.964 ± 0.048) y la combinación elegida cambia entre folds (6 distintas en 10). Se mantiene la configuración inicial: es la más simple y la grilla no aporta evidencia para cambiarla.
+
 ## Validación
-- **Holdout estratificado 80/20** para las métricas finales reportadas.
-- **Validación cruzada estratificada k = 5** sobre el 80 % para elegir hiperparámetros y reportar media ± desviación estándar.
+- **Métrica principal: validación cruzada estratificada repetida 5x5 sobre los 70 alumnos reales** (`comparar_aumento.py`), media ± desviación. Con 13 positivos, un holdout de 14 alumnos (3 positivos) es demasiado inestable para ser la métrica principal (decisión 2026-10-10).
+- **Holdout estratificado 80/20** (`train.py`): se reporta como complemento, con su matriz de confusión.
+- **Validación cruzada estratificada k = 5** sobre el 80 % para elegir hiperparámetros.
 - `random_state=42` en todo para que sea reproducible.
 
 ## Métricas (declaradas en la metodología)
@@ -79,14 +103,19 @@ Búsqueda de hiperparámetros (opcional, grilla pequeña por el tamaño de datos
 
 Opcional: ROC-AUC (aparece en los antecedentes [3], [14] y sirve para la Discusión).
 
-## Umbrales de nivel de riesgo (provisionales)
+## Umbrales de nivel de riesgo (decisión D9, 2026-10-10)
 | Probabilidad | Nivel | Color UI |
 |---|---|---|
-| < 0.33 | Bajo | 🟢 |
-| 0.33 – < 0.66 | Medio | 🟡 |
-| ≥ 0.66 | Alto | 🔴 |
+| < 0.15 | Bajo | 🟢 |
+| 0.15 – < 0.50 | Medio | 🟡 |
+| ≥ 0.50 | Alto | 🔴 |
 
-Ajustar después de ver la distribución real de probabilidades y justificar el criterio en la tesis.
+Criterio, a partir de las probabilidades fuera de muestra del histórico (cada alumno 2024 predicho por modelos que no lo vieron; CV 5x5 con SMOTE, configuración de `rf_v3`):
+- **Alto (≥ 0.50):** es el corte con que el clasificador predice `deserto = 1`, así que el nivel alto coincide con las métricas reportadas. El índice de Youden de la curva ROC da 0.556, cercano. Con este corte se identificaron los 13 desertores con 2 falsos positivos (precision 0.87). Ningún desertor tuvo probabilidad menor a 0.556.
+- **Medio (0.15 – < 0.50):** 0.15 ≈ percentil 90 de la probabilidad de los no desertores (0.152): solo 1 de cada 10 alumnos que no desertaron supera ese valor. Es una franja de seguimiento preventivo, no una predicción de deserción.
+- **Bajo (< 0.15):** el 90 % de los no desertores del histórico.
+
+Distribución en PRE 2026 con `rf_v3`: control 27 / 7 / 1, experimental 27 / 4 / 3 (bajo / medio / alto).
 
 ## Importancia de variables → sustento de OE1, OE2 y OE3
 - `feature_importances_` (MDI, reducción de impureza de Gini)

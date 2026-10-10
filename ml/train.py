@@ -66,9 +66,10 @@ SEMILLA = 42
 PROPORCION_TEST = 0.20
 K_FOLDS = 5
 
-# Umbrales de nivel de riesgo (docs/MODELO.md)
-UMBRAL_MEDIO = 0.33
-UMBRAL_ALTO = 0.66
+# Umbrales de nivel de riesgo (decisión D9, docs/MODELO.md): alto = corte de
+# decisión del clasificador; medio = P90 de los no desertores (CV 5x5, 2024)
+UMBRAL_MEDIO = 0.15
+UMBRAL_ALTO = 0.50
 
 FUENTES = ("historico_real", "opcion_b", "sintetico")
 AVISO_NO_RESULTADO = (

@@ -14,6 +14,18 @@
 
 ---
 
+### 2026-10-10 — Cierre de Fases 2 y 3
+**Tipo:** desarrollo
+**Qué se hizo:**
+- Fase 2: `historico.csv` = 2024 v5 (70 alumnos, 13 desertores, 0 excluidos); la versión anterior quedó en `historico_v1_2024_2025.csv`. Documentado en `MODELO.md` ("Histórico final") con mediana/RIC y U de Mann-Whitney por clase (promedio p = 0.003, r = 0.54; asistencia p < 0.001, r = 0.91; reuniones p < 0.001, r = 0.70). CSV para SPSS `spss_historico_v5.csv`.
+- Fase 3: `tune.py` admite `--aumentar`. CV anidada con SMOTE: la búsqueda iguala a la configuración inicial (AUC 0.993, F1 0.899) y la combinación elegida varía entre folds → se mantiene la inicial.
+- Umbrales D9 con probabilidades fuera de muestra del histórico: alto ≥ 0.50 (corte del clasificador; Youden 0.556; 13/13 desertores, 2 falsos positivos), medio ≥ 0.15 (P90 de no desertores = 0.152). `rf_v3` reentrenado (mismo modelo, JSON con los nuevos umbrales). PRE 2026: control 27 / 7 / 1, experimental 27 / 4 / 3. `spss_pre2026_v5.csv` regenerado.
+- Métrica principal: CV 5x5 sobre reales; el holdout queda como complemento.
+**Decisiones tomadas:** D9 (umbrales) y configuración inicial del RF como final.
+**Pendientes derivados:** Fase 4 (backend).
+
+---
+
 ### 2026-10-09 — PRE 2026 v5 vigente y clasificación con `rf_v3`
 **Tipo:** desarrollo
 **Qué se hizo:**

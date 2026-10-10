@@ -18,6 +18,10 @@ los datos de entrenamiento (ml/aumento.py), con --metodo-aumento smote
 CV, holdout e importancia se miden siempre sobre alumnos reales. Los
 sintéticos del 80 % se guardan en data/processed/ para el anexo de la tesis.
 
+--final (opcional, decisión D11): tras evaluar, reentrena la misma
+configuración con el 100 % de los reales (y su aumento) y guarda ese modelo
+para producción. Las métricas del .json siguen siendo las de la evaluación.
+
 Solo "historico_real" puede citarse como resultado de la tesis. Con
 "opcion_b" o "sintetico" el script imprime y guarda una advertencia: son
 prueba de concepto del pipeline, no resultados (docs/MODELO.md).
@@ -26,6 +30,7 @@ Uso:
     python ml/train.py --data data/synthetic/historico.csv --version v0 --fuente sintetico
     python ml/train.py --data data/processed/2026_pre_opcion_b.csv --version v0b --fuente opcion_b
     python ml/train.py --data data/processed/historico.csv --version v3 --fuente historico_real --aumentar 2
+    python ml/train.py --data data/processed/historico.csv --version v4 --fuente historico_real --aumentar 2 --final
     python ml/train.py --data data/processed/historico.csv --version v3g --fuente historico_real --aumentar 2 --metodo-aumento ctgan
 """
 
@@ -167,7 +172,11 @@ def crear_modelo(aumentar: float, metodo: str = "smote"):
 
 
 def entrenar(
-    ruta_datos: Path, fuente: str, aumentar: float = 0, metodo: str = "smote"
+    ruta_datos: Path,
+    fuente: str,
+    aumentar: float = 0,
+    metodo: str = "smote",
+    final: bool = False,
 ) -> dict:
     if aumentar < 0:
         raise SystemExit("[ERROR] --aumentar no puede ser negativo")
@@ -182,6 +191,14 @@ def entrenar(
     holdout = evaluar_holdout(modelo, x_test, y_test)
     importancias = importancia_variables(modelo, x_test, y_test)
     niveles = distribucion_niveles(modelo, x_test)
+
+    # Modelo de producción (decisión D11): misma configuración reentrenada con
+    # todos los alumnos reales. Las métricas siguen siendo las de la evaluación
+    # (CV y holdout del 80 %); con el 100 % ya no quedan alumnos sin ver.
+    modelo_evaluado = modelo
+    if final:
+        modelo = crear_modelo(aumentar, metodo)
+        modelo.fit(x, y)
 
     metadatos = {
         "fecha": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
@@ -198,11 +215,18 @@ def entrenar(
             "metodo": metodo,
             "descripcion": DESCRIPCION_METODO[metodo],
             "k_vecinos": K_VECINOS if metodo == "smote" else None,
-            "n_sinteticos_en_train": int(getattr(modelo, "n_sinteticos_", 0)),
+            "n_sinteticos_en_train": int(getattr(modelo_evaluado, "n_sinteticos_", 0)),
             "metricas_sobre": "solo alumnos reales",
         }
         if aumentar > 0
         else None,
+        "modelo_guardado": {
+            "entrenado_con": "100 % de los reales (producción)"
+            if final
+            else "80 % de los reales (modelo del holdout)",
+            "n_reales": len(x) if final else len(x_train),
+            "n_sinteticos": int(getattr(modelo, "n_sinteticos_", 0)),
+        },
         "validacion_cruzada_k5_sobre_train": cv,
         "holdout_20pct": holdout,
         "importancia_variables": importancias,
@@ -213,7 +237,7 @@ def entrenar(
         metadatos["aviso"] = AVISO_NO_RESULTADO
     sinteticos = None
     if aumentar > 0:
-        # Los mismos sintéticos con que se entrenó el modelo final (80 %)
+        # Los mismos sintéticos con que se entrenó el modelo guardado
         sinteticos = modelo.sinteticos_
     return {"modelo": modelo, "metadatos": metadatos, "sinteticos": sinteticos}
 
@@ -238,6 +262,12 @@ def main() -> None:
     )
     parser.add_argument("--metodo-aumento", choices=METODOS, default="smote")
     parser.add_argument(
+        "--final",
+        action="store_true",
+        help="Guarda el modelo reentrenado con el 100 %% de los reales (producción, D11); "
+        "las métricas siguen siendo las de la evaluación",
+    )
+    parser.add_argument(
         "--out",
         type=Path,
         default=Path(__file__).resolve().parent / "models",
@@ -245,7 +275,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    resultado = entrenar(args.data, args.fuente, args.aumentar, args.metodo_aumento)
+    resultado = entrenar(
+        args.data, args.fuente, args.aumentar, args.metodo_aumento, args.final
+    )
     args.out.mkdir(parents=True, exist_ok=True)
     ruta_modelo = args.out / f"rf_{args.version}.joblib"
     ruta_json = args.out / f"rf_{args.version}.json"
@@ -286,6 +318,10 @@ def main() -> None:
             f"Aumento {args.metodo_aumento} x{args.aumentar}: {m['aumento']['n_sinteticos_en_train']} sintéticos"
             f" en train; métricas sobre reales -> {ruta_sint}"
         )
+    g = m["modelo_guardado"]
+    print(
+        f"Modelo guardado: {g['entrenado_con']}, {g['n_reales']} reales + {g['n_sinteticos']} sintéticos"
+    )
     print(f"[OK] {ruta_modelo}")
     print(f"[OK] {ruta_json}")
 

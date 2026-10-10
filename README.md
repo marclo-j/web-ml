@@ -21,7 +21,7 @@ cp frontend/.env.example frontend/.env.local
 | `DATABASE_URL` | backend | Cadena de Neon con *connection pooling* (host `-pooler`, `sslmode=require`). Vacío = SQLite local |
 | `JWT_SECRET` | backend | Secreto para firmar las sesiones (≥ 32 caracteres) |
 | `JWT_EXPIRA_MIN` | backend | Duración de la sesión (por defecto 480 min) |
-| `MODEL_PATH` | backend | ej. `ml/models/rf_v3.joblib` (relativo a la raíz del repo) |
+| `MODEL_PATH` | backend | ej. `ml/models/rf_v4.joblib` (relativo a la raíz del repo) |
 | `AUTH_DESACTIVADA` | backend | `1` solo en desarrollo local con SQLite (sin login) |
 | `API_URL` | frontend | URL del backend, ej. `http://localhost:8000` (solo la usa el servidor de Next.js) |
 

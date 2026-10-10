@@ -86,3 +86,14 @@ def test_entrenar_extremo_a_extremo(tmp_path):
 
     resultado_real = entrenar(ruta, fuente="historico_real")
     assert "aviso" not in resultado_real["metadatos"]
+    assert resultado_real["metadatos"]["modelo_guardado"]["n_reales"] == m["n_train"]
+
+    # --final: guarda el modelo con el 100 %, mismas métricas de evaluación
+    final = entrenar(ruta, fuente="historico_real", aumentar=1, final=True)
+    mf = final["metadatos"]
+    assert mf["modelo_guardado"]["n_reales"] == mf["n_total"]
+    assert mf["modelo_guardado"]["n_sinteticos"] == mf["n_total"]
+    assert mf["aumento"]["n_sinteticos_en_train"] == mf["n_train"]
+    assert final["modelo"].n_reales_ == mf["n_total"]
+    evaluado = entrenar(ruta, fuente="historico_real", aumentar=1)
+    assert mf["holdout_20pct"] == evaluado["metadatos"]["holdout_20pct"]

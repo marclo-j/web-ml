@@ -9,7 +9,7 @@
 | 0 | Setup y documentación | ✅ | — | Repo con estructura y `/docs` |
 | 1 | Fichas y recolección PRE | ✅ | 0 | 3 fichas + datos PRE de los 70 alumnos. Vigente: PRE 2026 v5 (2026-10-09, 3.° A control 35, 4.° B experimental 34, 1 excluido por traslado) |
 | 2 | Dataset de entrenamiento (etiquetado) | ✅ | 1 | `data/processed/2024_pre_v5.csv`: 70 alumnos (2024), 13 desertores; se completa con aumento SMOTE solo en entrenamiento (D8). 2025 descartado |
-| 3 | Entrenamiento y evaluación del modelo | ✅ | 2 | `rf_v3` (2024 + SMOTE): CV 5x5 sobre reales AUC 0.99, F1 0.91. Hiperparámetros iniciales (la búsqueda no mejora). Umbrales D9: 0.15 / 0.50 |
+| 3 | Entrenamiento y evaluación del modelo | ✅ | 2 | `rf_v3` (2024 + SMOTE): CV 5x5 sobre reales AUC 0.99, F1 0.91. Hiperparámetros iniciales (la búsqueda no mejora). Umbrales D9: 0.15 / 0.50. En producción `rf_v4` = mismo procedimiento con los 70 alumnos (D11) |
 | 4 | Backend (API) | ✅ | 3 | FastAPI con predicción, CRUD y autenticación propia, conectado a Neon. Falta crear usuarios |
 | 5 | Frontend (dashboard) | ✅ | 4 | Next.js 16: listado de riesgo por alumno, registro, CSV, detalle y modelo |
 | 6 | Despliegue e intervención | ⬜ | 5 | Web en producción, usada con grupo experimental |
@@ -61,6 +61,8 @@
 - [x] `rf_v3` = 2024 + SMOTE x2: CV 5x5 sobre reales AUC 0.993, F1 0.911, recall 0.967 (registrado en `MODELO.md`)
 - [x] Ajuste de hiperparámetros con CV anidada + SMOTE (`tune.py --aumentar 2`): sin mejora, se mantiene la configuración inicial
 - [x] Umbrales finales de nivel (D9): bajo < 0.15 ≤ medio < 0.50 ≤ alto
+- [x] Modelo de producción `rf_v4` (D11, 2026-10-10): reentrenado con los 70 reales + SMOTE; el backend lo carga por defecto
+- [x] Reimportar `carga_pre2026.csv` en la web para que las predicciones de Neon pasen a `rf_v4` (autor, 2026-10-10)
 - [x] Corridas de prueba: `rf_v0` (sintético) y `rf_v0b` (Opción B, real PRE 2026) — ver `MODELO.md`, ninguna es resultado de tesis
 
 **Qué decir:** "El modelo detecta a los desertores del histórico con AUC 0.99 evaluado solo sobre alumnos reales; la asistencia y la participación familiar son las dimensiones que más pesan. Los niveles bajo, medio y alto salen de las probabilidades del propio histórico."

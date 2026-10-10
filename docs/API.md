@@ -25,7 +25,7 @@ Código: `backend/app/` (routers en `routers/`, fórmulas en `services/indicador
 
 ## GET `/health`
 ```json
-{ "status": "ok", "modelo": "rf_v3" }
+{ "status": "ok", "modelo": "rf_v4" }
 ```
 
 ## POST `/auth/login`
@@ -59,7 +59,7 @@ Response:
   "indicadores": { "promedio": 14.2, "pct_asistencia": 89.47, "pct_reuniones": 25.0 },
   "probabilidad": 0.41,
   "nivel_riesgo": "medio",
-  "version_modelo": "rf_v3"
+  "version_modelo": "rf_v4"
 }
 ```
 
@@ -111,7 +111,7 @@ Response: el registro con indicadores calculados + la predicción creada. Un reg
 Lee el `.json` de metadatos que `ml/train.py` guarda junto al `.joblib` (y, si existe, `comparacion_aumento_<fuente>.json` para la métrica principal).
 ```json
 {
-  "version": "rf_v3", "entrenado": "2026-10-10", "fuente_datos": "historico_real",
+  "version": "rf_v4", "entrenado": "2026-10-10", "fuente_datos": "historico_real",
   "features": ["promedio", "pct_asistencia", "pct_reuniones"], "n_entrenamiento": 70,
   "metricas": {
     "validacion_cruzada_k5_sobre_train": { "f1": { "media": 0.0, "desviacion": 0.0 } },

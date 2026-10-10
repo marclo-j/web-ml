@@ -115,7 +115,9 @@ Criterio, a partir de las probabilidades fuera de muestra del histórico (cada a
 - **Medio (0.15 – < 0.50):** 0.15 ≈ percentil 90 de la probabilidad de los no desertores (0.152): solo 1 de cada 10 alumnos que no desertaron supera ese valor. Es una franja de seguimiento preventivo, no una predicción de deserción.
 - **Bajo (< 0.15):** el 90 % de los no desertores del histórico.
 
-Distribución en PRE 2026 con `rf_v3`: control 27 / 7 / 1, experimental 27 / 4 / 3 (bajo / medio / alto).
+Distribución en PRE 2026 con `rf_v4` (modelo en producción): control 28 / 6 / 1, experimental 27 / 4 / 3 (bajo / medio / alto). Con `rf_v3` era control 27 / 7 / 1 y experimental 27 / 4 / 3; solo cambia un alumno de control (EST-056, probabilidad 0.196 → 0.105, de medio a bajo).
+
+Los umbrales no cambian con `rf_v4`: salen de las probabilidades fuera de muestra de la CV 5x5, que no dependen de con cuántos alumnos se entrena el modelo guardado.
 
 ## Importancia de variables → sustento de OE1, OE2 y OE3
 - `feature_importances_` (MDI, reducción de impureza de Gini)
@@ -134,7 +136,11 @@ ml/.venv/Scripts/python ml/train.py --data <csv_con_indicadores_y_deserto> --ver
 |---|---|---|---|---|---|---|---|---|
 | rf_v0 | 2026-09-25 | sintéticos (300, histórico simulado con ruido) | 300 | 0.42 | 0.24 | 0.35 | 0.29 | Solo prueba de pipeline; el generador agrega ruido a propósito, no se espera buen desempeño |
 | rf_v0b | 2026-09-25 | PRE 2026 real (69 alumnos) + Opción B (umbral) | 69 | 1.00 | 1.00 | 1.00 | 1.00 | **No es resultado.** Confirma la advertencia de la Opción B: el modelo reproduce la regla de etiquetado, no aprende deserción real |
-| rf_v3 | 2026-10-09 | Histórico 2024 v5 (70 alumnos, 13 desertores) + SMOTE x2 solo en entrenamiento (D8) | 70 | 0.93 | 0.75 | 1.00 | 0.86 | Holdout de 14 alumnos (3 positivos), inestable. Métrica principal: CV 5x5 sobre reales de `comparar_aumento.py` con SMOTE: AUC 0.993 ± 0.02, F1 0.911 ± 0.13, recall 0.967 ± 0.12, precision 0.893 ± 0.18, accuracy 0.966 ± 0.05. Importancia (permutación, holdout): asistencia 0.42, reuniones 0.33, promedio ≈ 0 |
+| rf_v3 | 2026-10-09 | Histórico 2024 v5 (70 alumnos, 13 desertores) + SMOTE x2 solo en entrenamiento (D8) | 70 | 0.93 | 0.75 | 1.00 | 0.86 | Holdout de 14 alumnos (3 positivos), inestable. Métrica principal: CV 5x5 sobre reales de `comparar_aumento.py` con SMOTE: AUC 0.993 ± 0.02, F1 0.911 ± 0.13, recall 0.967 ± 0.12, precision 0.893 ± 0.18, accuracy 0.966 ± 0.05. Importancia (permutación, holdout): asistencia 0.42, reuniones 0.33, promedio ≈ 0. El `.joblib` es el modelo del holdout (56 reales + 112 sintéticos); reemplazado en producción por `rf_v4` |
+| rf_v4 | 2026-10-10 | Igual que `rf_v3`, guardado con `--final` (D11): reentrenado con los 70 reales + 140 sintéticos SMOTE | 70 | 0.93 | 0.75 | 1.00 | 0.86 | **Modelo en producción.** Evaluación idéntica a `rf_v3` (misma CV, holdout, matriz [[10, 1], [0, 3]] e importancia): las métricas describen el procedimiento, el `.joblib` es el mismo procedimiento con todos los datos |
+
+### Modelo de producción (decisión D11, 2026-10-10)
+`train.py --final` evalúa igual que siempre (CV y holdout con el 80 %, más la CV 5x5 de `comparar_aumento.py`) y después reentrena la misma configuración con el 100 % de los alumnos reales y su aumento SMOTE. Ese es el modelo que se guarda y que carga el backend. Es la práctica habitual: la evaluación estima cómo rinde el procedimiento con alumnos nuevos, y el modelo final aprovecha todos los casos disponibles (13 desertores en vez de 10). No hay métricas propias del modelo con el 100 %, porque ya no quedan alumnos sin ver; la validación externa es el desenlace 2026 (D2). En Metodología se declara así: "las métricas se obtuvieron por validación cruzada; el modelo final se reentrenó con la totalidad del histórico".
 
 Cada versión se guarda como `ml/models/rf_vN.joblib` + `rf_vN.json` (features, hiperparámetros, CV, holdout, matriz de confusión, importancia de variables, fecha, umbrales; con aviso si `fuente_datos` ≠ `historico_real`). No versionados (`ml/models/` solo tiene el `.gitkeep`).
 

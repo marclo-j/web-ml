@@ -14,6 +14,20 @@
 
 ---
 
+### 2026-10-10 — Modelo de producción `rf_v4` (D11)
+**Tipo:** desarrollo
+**Qué se hizo:**
+- Al preparar la guía de estudio se notó que `rf_v3.joblib` era el modelo del holdout: aprendió de 56 alumnos reales (10 desertores) + 112 sintéticos, no de los 70.
+- `train.py --final`: tras evaluar, reentrena la misma configuración con el 100 % de los reales y su aumento, y guarda ese modelo. Prueba nueva en `ml/tests/test_train.py`.
+- `rf_v4` = 70 reales + 140 sintéticos SMOTE. Evaluación idéntica a `rf_v3` (holdout [[10, 1], [0, 3]], CV, importancia). Umbrales D9 sin cambios.
+- PRE 2026 con `rf_v4`: control 28 / 6 / 1, experimental 27 / 4 / 3. Solo cambia EST-056 (control): 0.196 → 0.105, de medio a bajo. Diferencia máxima de probabilidad 0.11. `spss_pre2026_v5.csv` regenerado (respaldo con `rf_v3` en `spss_pre2026_v5_rf_v3.csv`).
+- Backend: `MODEL_PATH` por defecto `rf_v4` (también en `.env.example`, README y `API.md`). 42 pruebas de backend y 42 de ml en verde.
+**Decisiones tomadas:** D11, el modelo que usa la web se reentrena con todo el histórico; las métricas reportadas siguen siendo las de la CV 5x5 (ver `MODELO.md`).
+- El autor reinició el backend y reimportó `carga_pre2026.csv`: las predicciones de Neon ya son de `rf_v4`.
+**Pendientes derivados:** `rf_v4.joblib` y `.json` deben subirse a Render en la Fase 6.
+
+---
+
 ### 2026-10-10 — Fase 5: frontend Next.js
 **Tipo:** desarrollo
 **Qué se hizo:**

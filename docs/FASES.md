@@ -12,10 +12,10 @@
 | 3 | Entrenamiento y evaluación del modelo | ✅ | 2 | En producción `rf_v5` (D12): entrenamiento equilibrado a 40 % de desertores (13 reales + 25 sintéticos SMOTE vs 57 reales), CV 5x5 sobre reales AUC 0.99, F1 0.93. Umbrales: 0.222 / 0.50. `rf_v3`/`rf_v4` (SMOTE x2) quedan como comparación |
 | 4 | Backend (API) | ✅ | 3 | FastAPI con predicción, CRUD y autenticación propia, conectado a Neon. Falta crear usuarios |
 | 5 | Frontend (dashboard) | ✅ | 4 | Next.js 16: listado de riesgo por alumno, registro, CSV, detalle y modelo |
-| 6 | Despliegue e intervención | ⬜ | 5 | Web en producción, usada con grupo experimental |
-| 7 | Recolección POST | ⬜ | 6 | Datos POST de los 70 alumnos |
-| 8 | Análisis estadístico | ⬜ | 7 | Tablas de normalidad, contraste y métricas |
-| 9 | Redacción de Resultados y Discusión | ⬜ | 8 | Capítulos III y IV |
+| 6 | Despliegue e intervención | 🟨 | 5 | Web en producción, usada con grupo experimental. Despliegue pendiente (lo hace el autor después); falta registrar fechas y forma de uso de la intervención |
+| 7 | Recolección POST | ✅ | 6 | POST III bimestre (10/08–09/10, D13): 69 incluidos, 1 excluido. Desenlace real hasta el 09/10 (D14) |
+| 8 | Análisis estadístico | ✅ | 7 | `stats/output/` 1–7: descriptivos, niveles, normalidad, contraste, Wilcoxon complementario (D15), métricas de `rf_v5` y validación con el desenlace |
+| 9 | Redacción de Resultados y Discusión | 🟨 | 8 | Capítulos III a VI. La redacta el autor en otro chat con `docs/avances/2026-10-21_contexto_redaccion_tesis.md` |
 
 ---
 
@@ -25,7 +25,7 @@
 - [x] Definir documentos del repo
 - [x] Crear repo y estructura de carpetas (`ARQUITECTURA.md`)
 - [x] Configurar `.gitignore` (datos reales fuera)
-- [x] Cerrar decisiones pendientes de `VARIABLES.md` y `MODELO.md` (D2 opción b, umbral 50 %, cita [42]) — 2026-10-03. Siguen abiertas con el asesor las del `PLAN_ESTADISTICO.md` (variable contrastada y Wilcoxon / t pareada)
+- [x] Cerrar decisiones pendientes de `VARIABLES.md` y `MODELO.md` (D2 opción b, umbral 50 %, cita [42]) — 2026-10-03. Las del `PLAN_ESTADISTICO.md` (variable contrastada y Wilcoxon) se cerraron con D15 el 2026-10-21, sin asesor disponible
 
 ### Preparación de Fase 3 (adelantada)
 - [x] `ml/generate_synthetic.py` + `data/synthetic/historico.csv` y `carga_prueba.csv`, para no bloquear el desarrollo mientras llega el histórico real (ver `LOG_AVANCES.md`)
@@ -67,7 +67,7 @@
 - [x] Modelo de producción `rf_v5` (D12): 70 reales + 25 sintéticos desertores; umbral medio 0.222 (alto 0.50); backend y `analisis.py` apuntan a `rf_v5`
 - [x] Predicciones de Neon pasadas a `rf_v5` (PRE 2026: 55 / 11 / 3)
 - [x] Interpretación de "equilibrar a 40 / 60" confirmada por el autor; `spss_pre2026_v5.csv` regenerado con `rf_v5` (2026-10-20)
-- [ ] ⚠️ Borrar de Neon los alumnos de prueba EST-071 a EST-074 (Posprueba, 3.° A, Control) antes de la Fase 7; el resumen debe volver a 55 / 11 / 3
+- [x] Borrados de Neon los alumnos de prueba EST-071 a EST-074 (2026-10-20): quedan 69 estudiantes, registros y predicciones
 - [x] Corridas de prueba: `rf_v0` (sintético) y `rf_v0b` (Opción B, real PRE 2026) — ver `MODELO.md`, ninguna es resultado de tesis
 
 **Qué decir:** "El modelo detecta a los desertores del histórico con AUC 0.99 evaluado solo sobre alumnos reales; la asistencia y la participación familiar son las dimensiones que más pesan. Los niveles bajo, medio y alto salen de las probabilidades del propio histórico."
@@ -93,26 +93,33 @@
 ### Fase 6 — Despliegue e intervención
 - [ ] Backend en Render, frontend en Vercel
 - [ ] Capacitación breve a tutores del grupo experimental
-- [ ] Registrar fecha de inicio y fin de la intervención y el corte de la POST (por definir con la IE y el asesor; ver `PLAN_ESTADISTICO.md` → Diseño)
+- [x] Corte de la POST: III bimestre, 10/08–09/10/2026 (D13)
+- [ ] Registrar fecha de inicio y fin de la intervención y cómo usaron la web los tutores del experimental (lo necesita la Metodología)
 - [ ] Cuentas solo para los tutores del grupo experimental
 
 ### Fase 7 — Recolección POST
 - [x] Intento 2026-10-20: se llenaron las fichas con datos del **II bimestre** por error; se descartaron (quedan en `data/raw/_respaldos/2026_post_ii_bimestre_incorrecto/`). Fase 7 vuelve a empezar
 - [x] Fichas POST del **III bimestre** (10/08–09/10, D13) consolidadas con `preprocess.py` → `data/processed/2026_post.csv`: 69 incluidos (35 / 34), 1 excluido (EST-020, traslado, sin notas) (2026-10-21)
 - [x] `deserto` del directivo en `data/raw/2026_desenlace/` y validación del modelo con `ml/validar_desenlace.py` (D14, 2026-10-21): AUC 0.687, recall 0.09 (corte 0.50) / 0.45 (corte 0.222); corte del `deserto` 09/10/2026; declarar como limitación
-- [ ] Mismas fichas, mismo procedimiento que Fase 1, para ambos grupos
+- [x] Mismas fichas, mismo procedimiento que Fase 1, para ambos grupos (`momento` corregido a `post` en las 3 fichas; original en `data/raw/_respaldos/2026_post_iii_bimestre_momento_pre/`)
 
 ### Fase 8 — Análisis estadístico
 - [x] `stats/analisis.py` (adelantado, 2026-10-10): tablas PRE listas (descriptivos, niveles, normalidad, contraste, métricas del modelo); la parte POST se activa con `--post`
 - [x] `analisis.py --post --intragrupo` con PRE v5 y POST III bimestre, `rf_v5` (2026-10-21): POST control vs experimental significativo en los 4 contrastes (p < 0.001). Corregido en `analisis.py` que la CV de `6_metricas_modelo.csv` salía de `rf_v3`
-- [ ] Seguir `PLAN_ESTADISTICO.md` paso a paso con los datos POST (interpretación y redacción)
-- [ ] Exportar tablas listas para Word
+- [x] Variable contrastada y Wilcoxon decididos (D15): nivel de riesgo (HG) e indicadores (H1–H3) control vs experimental en el POST; Wilcoxon PRE vs POST como complementario
+- [x] Tablas exportadas para Word en `stats/output/` (CSV con `;` y coma decimal), incluida `7_validacion_desenlace.csv`
 
 ### Fase 9 — Redacción
-- [ ] Capítulo III Resultados (orden: general → OE1 → OE2 → OE3)
-- [ ] Capítulo IV Discusión (contraste con antecedentes)
+- [x] Contexto y prompt para el chat de redacción: `docs/avances/2026-10-21_contexto_redaccion_tesis.md` y `2026-10-21_prompt_plan_redaccion.md`; guía UCV en `guia_de_elaboracion_tesis.md` (2026-10-21)
+- [ ] Actualizar Metodología con lo ejecutado y corregir las observaciones 1–11 del contexto
+- [ ] Capítulo III Resultados (orden: general → OE1 → OE2 → OE3, más complementario y validación externa)
+- [ ] Capítulo IV Discusión (contraste con antecedentes y limitaciones)
+- [ ] Capítulos V Conclusiones y VI Recomendaciones; Resumen y Abstract; Referencias (mín. 30) y anexos
 
 ---
+
+## 🎯 Hito 2 — Sábado 24/10/2026: tesis completa
+Estado al 2026-10-21: fases 0–5, 7 y 8 hechas; la redacción (Fase 9) la hace el autor en otro chat. Pendientes fuera del camino crítico: despliegue (Fase 6) y creación de usuarios (Fase 4).
 
 ## 🎯 Hito 1 — Sábado 26/09/2026
 **Mínimo:** Fase 0 completa + plantillas de fichas (Fase 1, primer punto).

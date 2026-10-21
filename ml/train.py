@@ -31,6 +31,7 @@ Uso:
     python ml/train.py --data data/processed/2026_pre_opcion_b.csv --version v0b --fuente opcion_b
     python ml/train.py --data data/processed/historico.csv --version v3 --fuente historico_real --aumentar 2
     python ml/train.py --data data/processed/historico.csv --version v4 --fuente historico_real --aumentar 2 --final
+    python ml/train.py --data data/processed/historico.csv --version v5 --fuente historico_real --proporcion 0.40 --final
     python ml/train.py --data data/processed/historico.csv --version v3g --fuente historico_real --aumentar 2 --metodo-aumento ctgan
 """
 
@@ -72,8 +73,9 @@ PROPORCION_TEST = 0.20
 K_FOLDS = 5
 
 # Umbrales de nivel de riesgo (decisión D9, docs/MODELO.md): alto = corte de
-# decisión del clasificador; medio = P90 de los no desertores (CV 5x5, 2024)
-UMBRAL_MEDIO = 0.15
+# decisión del clasificador; medio = P90 de los no desertores (CV 5x5, 2024).
+# D12: con el entrenamiento equilibrado a 40 % el P90 pasó de 0.152 a 0.222
+UMBRAL_MEDIO = 0.222
 UMBRAL_ALTO = 0.50
 
 FUENTES = ("historico_real", "opcion_b", "sintetico")
@@ -160,13 +162,20 @@ DESCRIPCION_METODO = {
 }
 
 
-def crear_modelo(aumentar: float, metodo: str = "smote"):
-    if aumentar > 0:
+def crear_modelo(
+    aumentar: float,
+    metodo: str = "smote",
+    proporcion: float | None = None,
+    proporcion_previa: float | None = None,
+):
+    if aumentar > 0 or proporcion is not None or proporcion_previa is not None:
         return RFAumentado(
             factor=aumentar,
             semilla=SEMILLA,
             hiperparametros=HIPERPARAMETROS,
             metodo=metodo,
+            proporcion=proporcion,
+            proporcion_previa=proporcion_previa,
         )
     return RandomForestClassifier(**HIPERPARAMETROS)
 
@@ -177,15 +186,24 @@ def entrenar(
     aumentar: float = 0,
     metodo: str = "smote",
     final: bool = False,
+    proporcion: float | None = None,
+    proporcion_previa: float | None = None,
 ) -> dict:
     if aumentar < 0:
         raise SystemExit("[ERROR] --aumentar no puede ser negativo")
+    if proporcion is not None:
+        if not 0 < proporcion < 1:
+            raise SystemExit("[ERROR] --proporcion debe estar entre 0 y 1")
+    if proporcion_previa is not None:
+        if not 0 < proporcion_previa < 1:
+            raise SystemExit("[ERROR] --proporcion-previa debe estar entre 0 y 1")
+    con_aumento = aumentar > 0 or proporcion is not None or proporcion_previa is not None
     x, y = cargar_datos(ruta_datos)
     x_train, x_test, y_train, y_test = train_test_split(
         x, y, test_size=PROPORCION_TEST, stratify=y, random_state=SEMILLA
     )
 
-    modelo = crear_modelo(aumentar, metodo)
+    modelo = crear_modelo(aumentar, metodo, proporcion, proporcion_previa)
     cv = validar_cruzada(modelo, x_train, y_train)
     modelo.fit(x_train, y_train)
     holdout = evaluar_holdout(modelo, x_test, y_test)
@@ -197,7 +215,7 @@ def entrenar(
     # (CV y holdout del 80 %); con el 100 % ya no quedan alumnos sin ver.
     modelo_evaluado = modelo
     if final:
-        modelo = crear_modelo(aumentar, metodo)
+        modelo = crear_modelo(aumentar, metodo, proporcion, proporcion_previa)
         modelo.fit(x, y)
 
     metadatos = {
@@ -212,13 +230,15 @@ def entrenar(
         "hiperparametros": HIPERPARAMETROS,
         "aumento": {
             "factor": aumentar,
+            "proporcion_objetivo": proporcion,
+            "proporcion_previa_submuestreo": proporcion_previa,
             "metodo": metodo,
             "descripcion": DESCRIPCION_METODO[metodo],
             "k_vecinos": K_VECINOS if metodo == "smote" else None,
             "n_sinteticos_en_train": int(getattr(modelo_evaluado, "n_sinteticos_", 0)),
             "metricas_sobre": "solo alumnos reales",
         }
-        if aumentar > 0
+        if con_aumento
         else None,
         "modelo_guardado": {
             "entrenado_con": "100 % de los reales (producción)"
@@ -236,7 +256,7 @@ def entrenar(
     if fuente != "historico_real":
         metadatos["aviso"] = AVISO_NO_RESULTADO
     sinteticos = None
-    if aumentar > 0:
+    if con_aumento:
         # Los mismos sintéticos con que se entrenó el modelo guardado
         sinteticos = modelo.sinteticos_
     return {"modelo": modelo, "metadatos": metadatos, "sinteticos": sinteticos}
@@ -260,6 +280,21 @@ def main() -> None:
         default=0,
         help="Sintéticos por alumno real, solo en entrenamiento (D8). 0 = sin aumento",
     )
+    parser.add_argument(
+        "--proporcion",
+        type=float,
+        default=None,
+        help="D12: primero equilibra generando solo desertores hasta esta fracción "
+        "(ej. 0.40); luego --aumentar F agrega F × n por clase conservando "
+        "la proporción",
+    )
+    parser.add_argument(
+        "--proporcion-previa",
+        type=float,
+        default=None,
+        help="Opción B: antes del SMOTE, quita no desertores al azar hasta esta "
+        "fracción de desertores (ej. 0.28). Con --proporcion genera el resto",
+    )
     parser.add_argument("--metodo-aumento", choices=METODOS, default="smote")
     parser.add_argument(
         "--final",
@@ -276,7 +311,13 @@ def main() -> None:
     args = parser.parse_args()
 
     resultado = entrenar(
-        args.data, args.fuente, args.aumentar, args.metodo_aumento, args.final
+        args.data,
+        args.fuente,
+        args.aumentar,
+        args.metodo_aumento,
+        args.final,
+        args.proporcion,
+        args.proporcion_previa,
     )
     args.out.mkdir(parents=True, exist_ok=True)
     ruta_modelo = args.out / f"rf_{args.version}.joblib"
@@ -315,7 +356,13 @@ def main() -> None:
         ruta_sint.parent.mkdir(parents=True, exist_ok=True)
         resultado["sinteticos"].to_csv(ruta_sint, index=False)
         print(
-            f"Aumento {args.metodo_aumento} x{args.aumentar}: {m['aumento']['n_sinteticos_en_train']} sintéticos"
+            f"Aumento {args.metodo_aumento} "
+            + (
+                f"a {args.proporcion:.0%} desertores"
+                if args.proporcion is not None
+                else f"x{args.aumentar}"
+            )
+            + f": {m['aumento']['n_sinteticos_en_train']} sintéticos"
             f" en train; métricas sobre reales -> {ruta_sint}"
         )
     g = m["modelo_guardado"]

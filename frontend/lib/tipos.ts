@@ -82,6 +82,6 @@ export type InfoModelo = {
     };
   };
   umbrales: { medio: number; alto: number };
-  aumento: { metodo: string; factor: number } | null;
+  aumento: { metodo: string; factor: number; proporcion_objetivo?: number | null } | null;
   aviso: string | null;
 };

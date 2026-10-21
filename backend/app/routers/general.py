@@ -33,15 +33,28 @@ def info_modelo(request: Request, modelo: ModeloRiesgo = Depends(dep_modelo)):
         "validacion_cruzada_k5_sobre_train": m.get("validacion_cruzada_k5_sobre_train"),
         "holdout_20pct": m.get("holdout_20pct"),
     }
-    # Métrica principal (docs/MODELO.md): CV 5x5 sobre reales de comparar_aumento.py
-    ruta = request.app.state.config.model_path.parent / (
-        f"comparacion_aumento_{m.get('fuente_datos')}.json"
-    )
-    metodo = (m.get("aumento") or {}).get("metodo", "sin_aumento")
-    if ruta.is_file():
-        comparacion = json.loads(ruta.read_text(encoding="utf-8"))
-        if metodo in comparacion.get("utilidad", {}):
-            metricas["cv_5x5_sobre_reales"] = comparacion["utilidad"][metodo]
+    # Métrica principal (docs/MODELO.md): CV 5x5 sobre reales. El equilibrado
+    # a una proporción (D12) la guarda comparar_proporcion.py; el aumento por
+    # factor (D8), comparar_aumento.py
+    carpeta = request.app.state.config.model_path.parent
+    aumento = m.get("aumento") or {}
+    fuente = m.get("fuente_datos")
+    proporcion = aumento.get("proporcion_objetivo")
+    if proporcion is not None:
+        ruta = carpeta / f"comparacion_proporcion_{fuente}.json"
+        clave = f"proporcion_{proporcion:.2f}"
+        if ruta.is_file():
+            comparacion = json.loads(ruta.read_text(encoding="utf-8"))
+            actual = comparacion.get("configuraciones", {}).get(clave)
+            if actual:
+                metricas["cv_5x5_sobre_reales"] = actual["metricas"]
+    else:
+        ruta = carpeta / f"comparacion_aumento_{fuente}.json"
+        metodo = aumento.get("metodo", "sin_aumento")
+        if ruta.is_file():
+            comparacion = json.loads(ruta.read_text(encoding="utf-8"))
+            if metodo in comparacion.get("utilidad", {}):
+                metricas["cv_5x5_sobre_reales"] = comparacion["utilidad"][metodo]
     return {
         "version": modelo.version,
         "entrenado": m.get("fecha", ""),

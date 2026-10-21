@@ -25,7 +25,7 @@ Código: `backend/app/` (routers en `routers/`, fórmulas en `services/indicador
 
 ## GET `/health`
 ```json
-{ "status": "ok", "modelo": "rf_v4" }
+{ "status": "ok", "modelo": "rf_v5" }
 ```
 
 ## POST `/auth/login`
@@ -59,7 +59,7 @@ Response:
   "indicadores": { "promedio": 14.2, "pct_asistencia": 89.47, "pct_reuniones": 25.0 },
   "probabilidad": 0.41,
   "nivel_riesgo": "medio",
-  "version_modelo": "rf_v4"
+  "version_modelo": "rf_v5"
 }
 ```
 
@@ -108,18 +108,18 @@ Response: el registro con indicadores calculados + la predicción creada. Un reg
 ```
 
 ## GET `/modelo`
-Lee el `.json` de metadatos que `ml/train.py` guarda junto al `.joblib` (y, si existe, `comparacion_aumento_<fuente>.json` para la métrica principal).
+Lee el `.json` de metadatos que `ml/train.py` guarda junto al `.joblib` (y, si existe, `comparacion_proporcion_<fuente>.json` —modelos con proporción objetivo, D12— o `comparacion_aumento_<fuente>.json` para la métrica principal).
 ```json
 {
-  "version": "rf_v4", "entrenado": "2026-10-10", "fuente_datos": "historico_real",
+  "version": "rf_v5", "entrenado": "2026-10-17", "fuente_datos": "historico_real",
   "features": ["promedio", "pct_asistencia", "pct_reuniones"], "n_entrenamiento": 70,
   "metricas": {
     "validacion_cruzada_k5_sobre_train": { "f1": { "media": 0.0, "desviacion": 0.0 } },
     "holdout_20pct": { "f1": 0.0 },
     "cv_5x5_sobre_reales": { "roc_auc": { "media": 0.0, "desviacion": 0.0 } }
   },
-  "umbrales": { "medio": 0.15, "alto": 0.50 },
-  "aumento": { "metodo": "smote", "factor": 2.0 },
+  "umbrales": { "medio": 0.222, "alto": 0.50 },
+  "aumento": { "metodo": "smote", "factor": 0.0, "proporcion_objetivo": 0.4 },
   "aviso": null
 }
 ```

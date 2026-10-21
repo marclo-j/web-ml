@@ -9,7 +9,7 @@
 | 0 | Setup y documentación | ✅ | — | Repo con estructura y `/docs` |
 | 1 | Fichas y recolección PRE | ✅ | 0 | 3 fichas + datos PRE de los 70 alumnos. Vigente: PRE 2026 v5 (2026-10-09, 3.° A control 35, 4.° B experimental 34, 1 excluido por traslado) |
 | 2 | Dataset de entrenamiento (etiquetado) | ✅ | 1 | `data/processed/2024_pre_v5.csv`: 70 alumnos (2024), 13 desertores; se completa con aumento SMOTE solo en entrenamiento (D8). 2025 descartado |
-| 3 | Entrenamiento y evaluación del modelo | ✅ | 2 | `rf_v3` (2024 + SMOTE): CV 5x5 sobre reales AUC 0.99, F1 0.91. Hiperparámetros iniciales (la búsqueda no mejora). Umbrales D9: 0.15 / 0.50. En producción `rf_v4` = mismo procedimiento con los 70 alumnos (D11) |
+| 3 | Entrenamiento y evaluación del modelo | ✅ | 2 | En producción `rf_v5` (D12): entrenamiento equilibrado a 40 % de desertores (13 reales + 25 sintéticos SMOTE vs 57 reales), CV 5x5 sobre reales AUC 0.99, F1 0.93. Umbrales: 0.222 / 0.50. `rf_v3`/`rf_v4` (SMOTE x2) quedan como comparación |
 | 4 | Backend (API) | ✅ | 3 | FastAPI con predicción, CRUD y autenticación propia, conectado a Neon. Falta crear usuarios |
 | 5 | Frontend (dashboard) | ✅ | 4 | Next.js 16: listado de riesgo por alumno, registro, CSV, detalle y modelo |
 | 6 | Despliegue e intervención | ⬜ | 5 | Web en producción, usada con grupo experimental |
@@ -63,6 +63,11 @@
 - [x] Umbrales finales de nivel (D9): bajo < 0.15 ≤ medio < 0.50 ≤ alto
 - [x] Modelo de producción `rf_v4` (D11, 2026-10-10): reentrenado con los 70 reales + SMOTE; el backend lo carga por defecto
 - [x] Reimportar `carga_pre2026.csv` en la web para que las predicciones de Neon pasen a `rf_v4` (autor, 2026-10-10)
+- [x] Observación del docente (2026-10-17): clases muy desbalanceadas sesgan al modelo → D12, entrenamiento equilibrado a 40 % (`--proporcion 0.40`), comparado con refuerzo y submuestreo en `comparar_proporcion.py`
+- [x] Modelo de producción `rf_v5` (D12): 70 reales + 25 sintéticos desertores; umbral medio 0.222 (alto 0.50); backend y `analisis.py` apuntan a `rf_v5`
+- [x] Predicciones de Neon pasadas a `rf_v5` (PRE 2026: 55 / 11 / 3)
+- [x] Interpretación de "equilibrar a 40 / 60" confirmada por el autor; `spss_pre2026_v5.csv` regenerado con `rf_v5` (2026-10-20)
+- [ ] ⚠️ Borrar de Neon los alumnos de prueba EST-071 a EST-074 (Posprueba, 3.° A, Control) antes de la Fase 7; el resumen debe volver a 55 / 11 / 3
 - [x] Corridas de prueba: `rf_v0` (sintético) y `rf_v0b` (Opción B, real PRE 2026) — ver `MODELO.md`, ninguna es resultado de tesis
 
 **Qué decir:** "El modelo detecta a los desertores del histórico con AUC 0.99 evaluado solo sobre alumnos reales; la asistencia y la participación familiar son las dimensiones que más pesan. Los niveles bajo, medio y alto salen de las probabilidades del propio histórico."
@@ -88,13 +93,19 @@
 ### Fase 6 — Despliegue e intervención
 - [ ] Backend en Render, frontend en Vercel
 - [ ] Capacitación breve a tutores del grupo experimental
-- [ ] Registrar fecha de inicio y fin de la intervención
+- [ ] Registrar fecha de inicio y fin de la intervención y el corte de la POST (por definir con la IE y el asesor; ver `PLAN_ESTADISTICO.md` → Diseño)
+- [ ] Cuentas solo para los tutores del grupo experimental
 
 ### Fase 7 — Recolección POST
+- [x] Intento 2026-10-20: se llenaron las fichas con datos del **II bimestre** por error; se descartaron (quedan en `data/raw/_respaldos/2026_post_ii_bimestre_incorrecto/`). Fase 7 vuelve a empezar
+- [x] Fichas POST del **III bimestre** (10/08–09/10, D13) consolidadas con `preprocess.py` → `data/processed/2026_post.csv`: 69 incluidos (35 / 34), 1 excluido (EST-020, traslado, sin notas) (2026-10-21)
+- [x] `deserto` del directivo en `data/raw/2026_desenlace/` y validación del modelo con `ml/validar_desenlace.py` (D14, 2026-10-21): AUC 0.687, recall 0.09 (corte 0.50) / 0.45 (corte 0.222); corte del `deserto` 09/10/2026; declarar como limitación
 - [ ] Mismas fichas, mismo procedimiento que Fase 1, para ambos grupos
 
 ### Fase 8 — Análisis estadístico
-- [ ] Seguir `PLAN_ESTADISTICO.md` paso a paso
+- [x] `stats/analisis.py` (adelantado, 2026-10-10): tablas PRE listas (descriptivos, niveles, normalidad, contraste, métricas del modelo); la parte POST se activa con `--post`
+- [x] `analisis.py --post --intragrupo` con PRE v5 y POST III bimestre, `rf_v5` (2026-10-21): POST control vs experimental significativo en los 4 contrastes (p < 0.001). Corregido en `analisis.py` que la CV de `6_metricas_modelo.csv` salía de `rf_v3`
+- [ ] Seguir `PLAN_ESTADISTICO.md` paso a paso con los datos POST (interpretación y redacción)
 - [ ] Exportar tablas listas para Word
 
 ### Fase 9 — Redacción

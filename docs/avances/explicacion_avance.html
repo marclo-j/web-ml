@@ -1,0 +1,332 @@
+<title>Avance del modelo y la web</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600;7..72,700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: una sola columna de lectura ancha, secciones separadas por aire y no por cajas; pensada para leer en voz alta de arriba abajo */
+:root {
+  --papel: #fbfcfd; --hoja: #ffffff; --tinta: #16222e; --tenue: #586677; --linea: #dbe3ea;
+  --acento: #1b5e8a; --acento-suave: #e6f0f8;
+  --bajo: #2e7d4f; --bajo-f: #e2f3e8; --medio: #a86a00; --medio-f: #fdf0d5; --alto: #b3261e; --alto-f: #fbe3e1;
+  --f-titulo: "Literata", Georgia, "Times New Roman", serif;
+  --f-texto: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --papel: #10161c; --hoja: #17202a; --tinta: #e6ecf1; --tenue: #9aa8b6; --linea: #2b3946;
+    --acento: #7db8e3; --acento-suave: #1c3040;
+    --bajo: #6fcf97; --bajo-f: #173326; --medio: #f0b955; --medio-f: #3a2e14; --alto: #f28b82; --alto-f: #3d1d1b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --papel: #10161c; --hoja: #17202a; --tinta: #e6ecf1; --tenue: #9aa8b6; --linea: #2b3946;
+  --acento: #7db8e3; --acento-suave: #1c3040;
+  --bajo: #6fcf97; --bajo-f: #173326; --medio: #f0b955; --medio-f: #3a2e14; --alto: #f28b82; --alto-f: #3d1d1b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--papel); color: var(--tinta); font-family: var(--f-texto); font-size: 19px; line-height: 1.65; }
+.pagina { max-width: 800px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 100px; }
+header { padding-bottom: 36px; }
+.eyebrow { font-weight: 700; text-transform: uppercase; letter-spacing: .1em; font-size: 13px; color: var(--acento); margin: 0 0 12px; }
+h1, h2, h3 { font-family: var(--f-titulo); text-wrap: balance; line-height: 1.22; }
+h1 { font-size: clamp(32px, 6vw, 46px); margin: 0 0 18px; font-weight: 700; }
+h2 { font-size: clamp(26px, 4.5vw, 32px); margin: 0 0 18px; font-weight: 700; }
+h3 { font-size: 21px; margin: 34px 0 10px; font-weight: 600; }
+.bajada { font-size: 21px; color: var(--tenue); margin: 0 0 26px; max-width: 34em; }
+.indice { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 15px; }
+.indice a { display: block; padding: 5px 12px; border: 1px solid var(--linea); border-radius: 999px; color: var(--tinta); text-decoration: none; background: var(--hoja); }
+.indice a:hover, .indice a:focus-visible { border-color: var(--acento); color: var(--acento); outline: none; }
+section { padding-block: 56px 0; scroll-margin-top: 12px; }
+.paso { font-family: var(--f-mono); font-size: 13px; color: var(--tenue); margin: 0 0 8px; }
+p { margin: 0 0 18px; max-width: 38em; }
+ul, ol { padding-left: 24px; margin: 0 0 18px; max-width: 38em; }
+li { margin-bottom: 8px; }
+strong { font-weight: 700; }
+code { font-family: var(--f-mono); font-size: .84em; background: var(--acento-suave); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+.destacado { font-family: var(--f-titulo); font-size: 22px; line-height: 1.5; border-left: 3px solid var(--acento); padding: 4px 0 4px 20px; margin: 26px 0; max-width: 30em; }
+.tabla { overflow-x: auto; margin: 14px 0 24px; border: 1px solid var(--linea); border-radius: 8px; background: var(--hoja); }
+table { border-collapse: collapse; width: 100%; font-size: 16.5px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--linea); vertical-align: top; }
+th { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--tenue); }
+tr:last-child td { border-bottom: 0; }
+td.n { text-align: right; font-family: var(--f-mono); font-size: 15px; white-space: nowrap; }
+tr.elegida td { background: var(--acento-suave); }
+.pill { display: inline-block; font-size: 14px; font-weight: 700; padding: 1px 10px; border-radius: 999px; }
+.pill.bajo { background: var(--bajo-f); color: var(--bajo); }
+.pill.medio { background: var(--medio-f); color: var(--medio); }
+.pill.alto { background: var(--alto-f); color: var(--alto); }
+.cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 22px 0 26px; }
+.cifra { background: var(--hoja); border: 1px solid var(--linea); border-radius: 8px; padding: 14px 16px; }
+.cifra b { display: block; font-family: var(--f-mono); font-size: 28px; font-weight: 600; color: var(--acento); line-height: 1.2; }
+.cifra span { font-size: 15px; color: var(--tenue); line-height: 1.3; display: block; margin-top: 2px; }
+.figura { background: var(--hoja); border: 1px solid var(--linea); border-radius: 8px; padding: 16px; margin: 14px 0 24px; overflow-x: auto; }
+.figura svg { display: block; width: 100%; height: auto; min-width: 520px; }
+.figura svg text { font-family: var(--f-texto); fill: var(--tinta); }
+.figura svg .t2 { fill: var(--tenue); }
+.figura figcaption { font-size: 15px; color: var(--tenue); margin-top: 8px; }
+pre.mermaid { background: var(--hoja); border: 1px solid var(--linea); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 14px 0 24px; }
+.fases { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 18px 0 24px; }
+.fase { background: var(--hoja); border: 1px solid var(--linea); border-radius: 8px; padding: 10px 12px; font-size: 15px; line-height: 1.35; }
+.fase b { display: block; font-family: var(--f-mono); font-size: 12.5px; margin-bottom: 2px; }
+.fase.hecha b { color: var(--bajo); }
+.fase.pend { color: var(--tenue); }
+.fase.pend b { color: var(--tenue); }
+.nota { font-size: 15px; color: var(--tenue); max-width: 38em; }
+footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--linea); font-size: 15px; color: var(--tenue); max-width: 38em; }
+@media (max-width: 600px) { body { font-size: 17px; } .destacado { font-size: 19px; } }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+<div class="pagina">
+<header>
+  <p class="eyebrow">Tesis · Ingeniería de Sistemas · UCV · avance al 10 de octubre de 2026</p>
+  <h1>Web con Machine Learning para determinar el riesgo de deserción escolar</h1>
+  <p class="bajada">Lo que construí hasta ahora, explicado en orden: el problema, los datos, cómo se entrenó el modelo, de dónde salen los datos sintéticos, cómo se evaluó y cómo funciona la web.</p>
+  <ul class="indice" aria-label="Secciones">
+    <li><a href="#problema">Problema y diseño</a></li>
+    <li><a href="#datos">Datos de entrenamiento</a></li>
+    <li><a href="#modelo">El modelo</a></li>
+    <li><a href="#sinteticos">Datos sintéticos</a></li>
+    <li><a href="#evaluacion">Evaluación</a></li>
+    <li><a href="#niveles">Niveles de riesgo</a></li>
+    <li><a href="#pre">Preprueba 2026</a></li>
+    <li><a href="#web">La web</a></li>
+    <li><a href="#limites">Limitaciones</a></li>
+    <li><a href="#siguiente">Qué sigue</a></li>
+  </ul>
+</header>
+
+<section id="problema">
+  <p class="paso">1 · Punto de partida</p>
+  <h2>El problema y el diseño de la investigación</h2>
+  <p>En la institución educativa de Comas el seguimiento de los estudiantes en riesgo era <strong>reactivo</strong>: el riesgo se detectaba cuando el alumno ya se había ido. La deserción reportada subió de 29 % en 2024 a 35 % en 2025, y no existía ninguna herramienta que anticipara quiénes estaban en riesgo.</p>
+  <p>Mi propuesta es una web que usa <strong>Machine Learning</strong> para estimar el nivel de riesgo de cada estudiante (bajo, medio o alto) con tres indicadores, uno por dimensión de la variable:</p>
+  <div class="tabla"><table>
+    <thead><tr><th>Dimensión</th><th>Indicador</th><th>Fórmula</th></tr></thead>
+    <tbody>
+      <tr><td>Rendimiento académico</td><td>Promedio de calificaciones</td><td>Σ notas ÷ n (escala 0–20)</td></tr>
+      <tr><td>Asistencia escolar</td><td>% de asistencia</td><td>días asistidos ÷ días programados × 100</td></tr>
+      <tr><td>Apoyo familiar</td><td>% de asistencia a reuniones</td><td>reuniones asistidas ÷ programadas × 100</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Diseño cuasiexperimental</h3>
+  <p>Trabajo con dos secciones ya formadas, sin sorteo: <strong>4.° B como grupo experimental</strong> (sus tutores usarán la web) y <strong>3.° A como grupo control</strong> (seguimiento habitual, sin la web). A ambos los mido antes y después de la intervención con las mismas tres fichas de registro.</p>
+  <div class="cifras">
+    <div class="cifra"><b>35</b><span>control, 3.° A</span></div>
+    <div class="cifra"><b>34</b><span>experimental, 4.° B</span></div>
+    <div class="cifra"><b>1</b><span>excluido por traslado definitivo</span></div>
+  </div>
+  <p>Antes de intervenir comprobé que los dos grupos parten igual. Con la prueba U de Mann-Whitney no hay diferencia en el promedio (p = 0.540), en la asistencia (p = 0.449), en las reuniones (p = 0.616) ni en el nivel de riesgo (p = 0.864). Eso es lo que permite atribuir a la web las diferencias que aparezcan después.</p>
+</section>
+
+<section id="datos">
+  <p class="paso">2 · Datos con los que se entrena</p>
+  <h2>Qué datos usé para entrenar el modelo</h2>
+  <p>Un modelo supervisado necesita ejemplos donde ya se conoce la respuesta. Usé un <strong>registro histórico de la institución con 70 estudiantes de 3.° y 4.° de secundaria</strong> (35 por sección) de los que se sabe si desertaron o no. Los datos están anonimizados con códigos (EST-001 en adelante), sin nombres ni DNI, conforme a la Ley N.° 29733.</p>
+  <div class="cifras">
+    <div class="cifra"><b>70</b><span>estudiantes reales</span></div>
+    <div class="cifra"><b>13</b><span>desertores (18.6 %)</span></div>
+    <div class="cifra"><b>57</b><span>no desertores</span></div>
+  </div>
+  <p>Cada estudiante tiene sus 10 notas (una por área), 45 días programados en el I bimestre y 2 reuniones de padres programadas. De ahí se calculan los tres indicadores con las fórmulas de la tesis.</p>
+  <h3>Un corte importante: el I bimestre</h3>
+  <p>Todos los indicadores se calculan solo con lo ocurrido hasta el cierre del <strong>I bimestre</strong>, en el histórico y en 2026 por igual. Si usara el año completo, un alumno que se fue a mitad de año tendría pocas asistencias porque ya se había ido, y el modelo aprendería la consecuencia de la deserción en vez de sus señales tempranas. Eso se llama fuga de información. Los desertores del histórico dejaron de asistir después del I bimestre, así que no hay fuga.</p>
+  <h3>Cómo se diferencian los desertores</h3>
+  <p>Mediana de cada indicador y valor p de Mann-Whitney:</p>
+  <div class="tabla"><table>
+    <thead><tr><th>Indicador</th><th>Desertó (13)</th><th>No desertó (57)</th><th>p</th></tr></thead>
+    <tbody>
+      <tr><td>Promedio</td><td class="n">10.60</td><td class="n">14.80</td><td class="n">0.003</td></tr>
+      <tr><td>% asistencia</td><td class="n">28.89</td><td class="n">64.44</td><td class="n">&lt; 0.001</td></tr>
+      <tr><td>% reuniones</td><td class="n">0.00</td><td class="n">50.00</td><td class="n">&lt; 0.001</td></tr>
+    </tbody>
+  </table></div>
+  <p>Los tres indicadores distinguen a quienes desertaron. La asistencia es la que más los separa, y ningún desertor tuvo padres que asistieran a una reunión.</p>
+</section>
+
+<section id="modelo">
+  <p class="paso">3 · El algoritmo</p>
+  <h2>El modelo: Random Forest</h2>
+  <p>Usé un <strong>Random Forest</strong> (bosque aleatorio) de scikit-learn, un algoritmo de aprendizaje supervisado. Es un conjunto de 200 árboles de decisión. Cada árbol aprende de una muestra distinta de alumnos y hace preguntas del tipo “¿la asistencia es menor a 40 %?” para separar desertores de no desertores. Para un alumno nuevo, cada árbol vota y la <strong>probabilidad de deserción</strong> es la proporción de árboles que votan “deserta”.</p>
+  <pre class="mermaid">flowchart LR
+  A["Alumno<br/>promedio · asistencia · reuniones"] --> B["200 árboles votan"]
+  B --> C["Probabilidad<br/>ejemplo: 0.81"]
+  C --> D["Nivel de riesgo<br/>bajo · medio · alto"]</pre>
+  <p>Planteé el problema como una clasificación binaria (desertó sí o no) y no directamente en tres niveles, porque el dato que la institución registra es si el alumno desertó. Los niveles se obtienen después, cortando la probabilidad. Así no invento etiquetas de “riesgo medio” que nadie registró.</p>
+  <h3>Configuración</h3>
+  <p>200 árboles, hojas de al menos 2 alumnos para no memorizar casos individuales, y pesos balanceados por clase para que un desertor no detectado pese más que un falso aviso. Probé una búsqueda de hiperparámetros con validación cruzada anidada y no mejoró nada, así que dejé la configuración inicial, que es la más simple.</p>
+</section>
+
+<section id="sinteticos">
+  <p class="paso">4 · Datos sintéticos</p>
+  <h2>De dónde salen los datos sintéticos y por qué los usé</h2>
+  <p>Con 13 desertores el modelo tiene muy pocos ejemplos de la clase que más importa. Siguiendo la indicación del docente de que es válido generar datos sintéticos para entrenar, apliqué <strong>aumento de datos</strong> sobre los 70 estudiantes reales.</p>
+  <h3>SMOTE, el método que usé</h3>
+  <p>SMOTE (Chawla et al., 2002) crea estudiantes nuevos <strong>interpolando entre estudiantes reales parecidos de la misma clase</strong>: toma un alumno real, busca a sus 5 vecinos más cercanos de su misma clase y crea uno nuevo en un punto del segmento que los une. Un sintético desertor siempre nace entre desertores reales; nunca inventa algo fuera de lo observado.</p>
+  <figure class="figura">
+    <svg viewBox="0 0 560 250" role="img" aria-label="Ilustración de SMOTE: un estudiante sintético se crea entre un desertor real y su vecino">
+      <line x1="50" y1="210" x2="530" y2="210" stroke="var(--linea)" stroke-width="1.5"/>
+      <line x1="50" y1="20" x2="50" y2="210" stroke="var(--linea)" stroke-width="1.5"/>
+      <text x="290" y="240" text-anchor="middle" font-size="13" class="t2">% asistencia →</text>
+      <text x="20" y="115" text-anchor="middle" font-size="13" class="t2" transform="rotate(-90 20 115)">promedio →</text>
+      <g fill="var(--bajo)"><circle cx="400" cy="60" r="7"/><circle cx="440" cy="80" r="7"/><circle cx="470" cy="50" r="7"/><circle cx="380" cy="100" r="7"/><circle cx="500" cy="95" r="7"/></g>
+      <g fill="var(--alto)"><circle cx="110" cy="150" r="7"/><circle cx="160" cy="130" r="7"/><circle cx="140" cy="180" r="7"/><circle cx="200" cy="160" r="7"/></g>
+      <line x1="110" y1="150" x2="200" y2="160" stroke="var(--alto)" stroke-width="1.5" stroke-dasharray="5 4"/>
+      <circle cx="155" cy="155" r="7" fill="var(--hoja)" stroke="var(--alto)" stroke-width="2.5"/>
+      <text x="155" y="116" text-anchor="middle" font-size="13">nuevo sintético</text>
+      <line x1="155" y1="120" x2="155" y2="146" stroke="var(--tenue)" stroke-width="1"/>
+      <text x="96" y="140" text-anchor="end" font-size="13">real</text>
+      <text x="212" y="176" font-size="13">vecino</text>
+      <circle cx="320" cy="30" r="6" fill="var(--alto)"/><text x="332" y="34" font-size="13">desertor real</text>
+      <circle cx="320" cy="52" r="6" fill="var(--bajo)"/><text x="332" y="56" font-size="13">no desertor real</text>
+    </svg>
+    <figcaption>Posiciones ilustrativas. El sintético cae sobre el segmento entre dos desertores reales.</figcaption>
+  </figure>
+  <p>Usé un <strong>factor 2</strong>: dos sintéticos por cada estudiante real, en cada clase, de modo que la proporción de desertores no cambia. En el modelo final son 70 reales y 140 sintéticos.</p>
+  <h3>CTGAN, el método que comparé y descarté</h3>
+  <p>Como el docente mencionó las redes generativas, también probé CTGAN (Xu et al., 2019), una GAN para datos tabulares: un generador crea registros falsos y un discriminador intenta distinguirlos de los reales. Comparé los tres escenarios con la misma validación, evaluando siempre con estudiantes reales:</p>
+  <div class="tabla"><table>
+    <thead><tr><th>Escenario</th><th>AUC</th><th>F1</th><th>Recall</th><th>Precisión</th></tr></thead>
+    <tbody>
+      <tr><td>Sin aumento</td><td class="n">0.994</td><td class="n">0.927</td><td class="n">1.000</td><td class="n">0.883</td></tr>
+      <tr class="elegida"><td><strong>SMOTE (elegido)</strong></td><td class="n">0.993</td><td class="n">0.911</td><td class="n">0.967</td><td class="n">0.893</td></tr>
+      <tr><td>CTGAN</td><td class="n">0.985</td><td class="n">0.859</td><td class="n">0.960</td><td class="n">0.824</td></tr>
+    </tbody>
+  </table></div>
+  <p>CTGAN rindió peor y, además, sus sintéticos no se parecen a los reales: con solo 13 desertores no logró aprender su distribución. Por ejemplo, generó desertores con 27 % de asistencia a reuniones promedio, cuando los reales tienen 0 %. Con el estadístico de Kolmogorov-Smirnov, que mide qué tan distinta es una distribución de otra (0 es idéntica y 1 totalmente distinta), SMOTE se mantuvo por debajo de 0.20 y CTGAN llegó a 0.73. Una GAN necesita muchos más datos que estos. Elegí SMOTE porque no empeora al modelo y sus sintéticos son fieles, y reporto CTGAN como alternativa evaluada y descartada con evidencia.</p>
+  <div class="destacado">Regla central: los datos sintéticos solo se usan para entrenar. Nunca para evaluar ni como resultado.</div>
+  <p>Para cumplirla, el aumento se aplica <strong>dentro de cada partición de entrenamiento</strong> de la validación cruzada. Si un sintético naciera de un alumno que está en la parte de prueba, el modelo vería a ese alumno disfrazado y las métricas saldrían infladas. Todas las métricas que presento se calcularon únicamente con estudiantes reales.</p>
+</section>
+
+<section id="evaluacion">
+  <p class="paso">5 · Cómo se evaluó</p>
+  <h2>Evaluación del modelo</h2>
+  <p>Un modelo no se evalúa con los mismos alumnos con los que aprendió. Usé dos formas de separar los datos.</p>
+  <p><strong>Validación cruzada estratificada 5×5, la métrica principal.</strong> Divido a los 70 estudiantes en 5 partes que mantienen la proporción de desertores. Entreno con 4, pruebo con la restante y roto las 5; luego repito todo 5 veces con repartos distintos. Son 25 evaluaciones y reporto la media y la desviación. Con solo 13 desertores, es más confiable que separar una sola vez.</p>
+  <div class="tabla"><table>
+    <thead><tr><th>Métrica</th><th>Media</th><th>± Desviación</th><th>Qué responde</th></tr></thead>
+    <tbody>
+      <tr><td>Recall</td><td class="n">0.967</td><td class="n">0.116</td><td>De los que desertaron, cuántos detectó</td></tr>
+      <tr><td>Precisión</td><td class="n">0.893</td><td class="n">0.180</td><td>De los que marcó en riesgo, cuántos lo estaban</td></tr>
+      <tr><td>F1</td><td class="n">0.911</td><td class="n">0.128</td><td>Balance entre las dos anteriores</td></tr>
+      <tr><td>Accuracy</td><td class="n">0.966</td><td class="n">0.050</td><td>Aciertos sobre el total</td></tr>
+      <tr><td>AUC-ROC</td><td class="n">0.993</td><td class="n">0.015</td><td>Capacidad de ordenar bien a desertores y no desertores</td></tr>
+    </tbody>
+  </table></div>
+  <p>El <strong>recall</strong> es la métrica que más me importa: un falso negativo es un alumno en riesgo que la web no detectó y podría desertar sin intervención. Un falso positivo solo genera un seguimiento innecesario.</p>
+  <p><strong>Holdout 80/20, como complemento.</strong> Aparté al azar el 20 % (14 estudiantes, 3 desertores) para probar. El modelo identificó a los 3 desertores y erró en un solo no desertor, que marcó como riesgo. Es un conjunto de prueba muy pequeño y por eso no lo uso como métrica principal.</p>
+  <div class="tabla"><table>
+    <thead><tr><th>Matriz de confusión</th><th>Predijo: no deserta</th><th>Predijo: deserta</th></tr></thead>
+    <tbody>
+      <tr><td>Real: no desertó</td><td class="n">10</td><td class="n">1</td></tr>
+      <tr><td>Real: desertó</td><td class="n">0</td><td class="n">3</td></tr>
+    </tbody>
+  </table></div>
+  <h3>Qué indicadores pesan más</h3>
+  <p>Con importancia por permutación (cuánto empeora el modelo si desordeno una variable): <strong>asistencia 0.42</strong>, <strong>reuniones 0.33</strong> y <strong>promedio cercano a 0</strong>. El promedio sí se relaciona con la deserción (los desertores tienen peor promedio), pero cuando el modelo ya conoce la asistencia y las reuniones, el promedio casi no agrega información nueva.</p>
+  <h3>El modelo que usa la web</h3>
+  <p>Después de evaluar, reentrené la misma configuración con los <strong>70 estudiantes reales y sus 140 sintéticos</strong> para que el modelo final aproveche los 13 desertores. Ese es el modelo en producción (<code>rf_v4</code>). Las métricas anteriores describen este procedimiento evaluado con alumnos que no vio.</p>
+</section>
+
+<section id="niveles">
+  <p class="paso">6 · De probabilidad a nivel</p>
+  <h2>Cómo se definen bajo, medio y alto</h2>
+  <p>El modelo entrega una probabilidad entre 0 y 1. La web la convierte en tres niveles con dos cortes, y ambos salen de los datos, no son arbitrarios. Los calculé con las probabilidades de cada alumno del histórico cuando fue evaluado por modelos que no lo habían visto.</p>
+  <figure class="figura">
+    <svg viewBox="0 0 560 110" role="img" aria-label="Escala de probabilidad con cortes en 0.15 y 0.50">
+      <rect x="30" y="26" width="75" height="34" fill="var(--bajo-f)" stroke="var(--bajo)"/>
+      <rect x="105" y="26" width="175" height="34" fill="var(--medio-f)" stroke="var(--medio)"/>
+      <rect x="280" y="26" width="250" height="34" fill="var(--alto-f)" stroke="var(--alto)"/>
+      <text x="67.5" y="48" text-anchor="middle" font-size="14" font-weight="700" style="fill:var(--bajo)">BAJO</text>
+      <text x="192.5" y="48" text-anchor="middle" font-size="14" font-weight="700" style="fill:var(--medio)">MEDIO</text>
+      <text x="405" y="48" text-anchor="middle" font-size="14" font-weight="700" style="fill:var(--alto)">ALTO</text>
+      <g font-size="13" font-family="JetBrains Mono, monospace" text-anchor="middle">
+        <text x="30" y="80">0</text><text x="105" y="80">0.15</text><text x="280" y="80">0.50</text><text x="530" y="80">1</text>
+      </g>
+    </svg>
+  </figure>
+  <ul>
+    <li><span class="pill alto">Alto, desde 0.50</span> Es el corte con el que el clasificador decide “deserta”, así que el nivel alto coincide con las métricas reportadas. Con él se identificaron los 13 desertores del histórico con solo 2 falsos positivos.</li>
+    <li><span class="pill medio">Medio, de 0.15 a 0.50</span> El 0.15 es el percentil 90 de la probabilidad de los no desertores: solo 1 de cada 10 alumnos que no desertó lo supera. Es una franja de seguimiento preventivo, no una predicción de deserción.</li>
+    <li><span class="pill bajo">Bajo, menos de 0.15</span> Donde quedó el 90 % de los no desertores.</li>
+  </ul>
+</section>
+
+<section id="pre">
+  <p class="paso">7 · Aplicado a la muestra</p>
+  <h2>Resultado en la preprueba 2026</h2>
+  <p>Con el modelo ya entrenado clasifiqué a los 69 estudiantes de la muestra con sus datos del I bimestre 2026. Esta es la línea base antes de la intervención:</p>
+  <div class="tabla"><table>
+    <thead><tr><th>Grupo</th><th><span class="pill bajo">Bajo</span></th><th><span class="pill medio">Medio</span></th><th><span class="pill alto">Alto</span></th></tr></thead>
+    <tbody>
+      <tr><td>Control · 3.° A (35)</td><td class="n">28 (80.0 %)</td><td class="n">6 (17.1 %)</td><td class="n">1 (2.9 %)</td></tr>
+      <tr><td>Experimental · 4.° B (34)</td><td class="n">27 (79.4 %)</td><td class="n">4 (11.8 %)</td><td class="n">3 (8.8 %)</td></tr>
+    </tbody>
+  </table></div>
+  <p>Cuando se mida la posprueba, usaré <strong>el mismo modelo sin reentrenarlo</strong> para que la comparación sea válida: el termómetro no puede cambiar entre la primera y la segunda medición. Lo que espero ver es que el grupo experimental reduzca sus casos de riesgo medio y alto más que el grupo control.</p>
+</section>
+
+<section id="web">
+  <p class="paso">8 · El sistema</p>
+  <h2>La web</h2>
+  <p>La web tiene las tres partes que declaré en la tesis: frontend, backend y base de datos, con el modelo como componente del backend.</p>
+  <pre class="mermaid">flowchart LR
+  U["Tutor o directivo"] --> F["Frontend<br/>Next.js"]
+  F --> B["Backend<br/>FastAPI"]
+  B --> M["Modelo<br/>Random Forest"]
+  B <--> D[("Base de datos<br/>PostgreSQL en Neon")]</pre>
+  <ol>
+    <li>El tutor registra los datos de un estudiante, o sube un archivo CSV con muchos.</li>
+    <li>El sistema valida los datos y calcula los tres indicadores con las fórmulas de la tesis.</li>
+    <li>El modelo calcula la probabilidad y el sistema la traduce a bajo, medio o alto.</li>
+    <li>El panel muestra a cada estudiante con su nivel y su color, con resumen por grupo y filtros.</li>
+  </ol>
+  <p>Cada alumno puede tener un registro de preprueba y otro de posprueba, de modo que ambas mediciones se comparan en el mismo sistema. Ya cargué la preprueba de los 69 estudiantes a través de la propia web y verifiqué que quedó guardada en la base de datos.</p>
+  <h3>Seguridad y privacidad</h3>
+  <p>Solo guarda códigos anónimos, nunca nombres ni DNI. El acceso es con usuario y contraseña propios: las contraseñas se guardan cifradas con Argon2id, la sesión usa un token firmado con vencimiento de 8 horas, hay bloqueo temporal tras 5 intentos fallidos y no existe registro público: yo creo las cuentas. Los datos reales de estudiantes no se publican en el repositorio.</p>
+</section>
+
+<section id="limites">
+  <p class="paso">9 · Con honestidad</p>
+  <h2>Limitaciones que declaro</h2>
+  <ul>
+    <li><strong>Muestra pequeña:</strong> un solo año de histórico y 13 casos de deserción. Por eso usé aumento de datos y validación cruzada, pero no reemplazan a más datos reales.</li>
+    <li><strong>Métricas muy altas:</strong> en el histórico las clases casi se separan solas por asistencia y reuniones, de modo que cualquier modelo rendiría cerca del máximo. Las presento como validación interna. La validación con alumnos que el modelo nunca vio llegará con la deserción real de 2026.</li>
+    <li><strong>Diferencia de tasas:</strong> la deserción en la muestra histórica (18.6 %) es menor que la institucional (29 %), lo que limita cuánto se puede generalizar.</li>
+    <li><strong>Datos sintéticos:</strong> son un apoyo al entrenamiento, no evidencia. Se declaran en Metodología y nunca se reportan como hallazgos.</li>
+    <li><strong>Grupos intactos:</strong> al ser cuasiexperimental no hay sorteo, y los grupos son de grados distintos. Lo compensa haber demostrado que parten equivalentes en la preprueba.</li>
+  </ul>
+</section>
+
+<section id="siguiente">
+  <p class="paso">10 · Estado</p>
+  <h2>Dónde estamos y qué sigue</h2>
+  <div class="fases">
+    <div class="fase hecha"><b>FASE 0 ✓</b>Documentación y arquitectura</div>
+    <div class="fase hecha"><b>FASE 1 ✓</b>Fichas y datos PRE</div>
+    <div class="fase hecha"><b>FASE 2 ✓</b>Histórico de entrenamiento</div>
+    <div class="fase hecha"><b>FASE 3 ✓</b>Modelo y umbrales</div>
+    <div class="fase hecha"><b>FASE 4 ✓</b>Backend y base de datos</div>
+    <div class="fase hecha"><b>FASE 5 ✓</b>Frontend</div>
+    <div class="fase pend"><b>FASE 6</b>Despliegue e intervención</div>
+    <div class="fase pend"><b>FASE 7</b>Recolección POST</div>
+    <div class="fase pend"><b>FASE 8</b>Análisis estadístico</div>
+    <div class="fase pend"><b>FASE 9</b>Resultados y Discusión</div>
+  </div>
+  <p>La parte técnica está completa: el modelo está entrenado y evaluado, y la web funciona con la preprueba cargada. Lo que sigue es:</p>
+  <ol>
+    <li>Publicar la web en internet y crear cuentas solo para los tutores del grupo experimental.</li>
+    <li>Definir con la institución y con usted las fechas de inicio y fin de la intervención y el corte de la posprueba.</li>
+    <li>Recoger la posprueba de ambos grupos con las mismas fichas.</li>
+    <li>Hacer el análisis estadístico (normalidad, contraste control contra experimental) y redactar Resultados y Discusión.</li>
+  </ol>
+  <p>Hay dos puntos que me gustaría consultarle: si la variable que se contrasta para la hipótesis general es el nivel de riesgo y si además conviene comparar la preprueba con la posprueba dentro de cada grupo.</p>
+</section>
+
+<footer>
+  <p>Este documento solo contiene cifras agregadas; no incluye datos individuales de estudiantes. Los datos sintéticos se usaron únicamente para entrenar el modelo.</p>
+</footer>
+</div>

@@ -14,6 +14,83 @@
 
 ---
 
+### 2026-10-21 — D15: variable contrastada y Wilcoxon
+**Tipo:** desarrollo
+**Decisiones tomadas:** D15, sin asesor disponible, con el criterio de menor riesgo de observación: se mantiene el contraste control vs experimental en el POST con la VD (nivel de riesgo, HG) y los 3 indicadores (H1-H3), siguiendo la metodología declarada (Shapiro-Wilk → t de Student o U de Mann-Whitney); Wilcoxon PRE vs POST se reporta como análisis complementario. El desempeño del modelo (HG: precisión) se sustenta con las métricas declaradas y la validación con el desenlace (D14).
+
+---
+
+### 2026-10-21 — Validación del modelo con el desenlace real (D14)
+**Tipo:** desarrollo
+**Qué se hizo:** el autor dejó en `data/raw/2026_desenlace/` las 3 fichas con `deserto` (11 desertores de 69; coinciden entre fichas). Nuevo `ml/validar_desenlace.py` (+5 pruebas; 62 pruebas de ml y stats en verde) → `stats/output/7_validacion_desenlace.csv`.
+**Resultado:** `rf_v5` sobre el PRE contra la deserción real: AUC 0.687; con corte 0.50 recall 0.09 y precisión 0.33; con corte medio 0.222 recall 0.45 y precisión 0.36. Detalle y lectura en `MODELO.md` (D14). Desempeño muy inferior al de la CV sobre 2024.
+**Decisiones tomadas:** D14, el desenlace real se usa solo para validar; se reporta como validación descriptiva y como limitación. No se reentrena ni se cambian umbrales.
+**Corte del `deserto`:** hasta el 09/10/2026, igual que el POST (confirmado por el autor).
+**Pendientes derivados:** decidir con el asesor cómo presentar esta validación (variable contrastada, para después); declarar en Limitaciones.
+
+---
+
+### 2026-10-21 — POST III bimestre y Fase 8 (resultados válidos)
+**Tipo:** desarrollo
+**Qué se hizo:** fichas POST del III bimestre (10/08–09/10) en `data/raw/2026_post/`; `momento` corregido a `post` editando el XML (original en `data/raw/_respaldos/2026_post_iii_bimestre_momento_pre/`). `preprocess.py` → `2026_post.csv`: 69 incluidos (35 control, 34 experimental), 1 excluido (EST-020, traslado, sin notas). `analisis.py --pre --post --intragrupo` con `rf_v5`. Se corrigió `analisis.py`: la CV 5x5 de `6_metricas_modelo.csv` se leía de `comparacion_aumento` (rf_v3) y ahora, como el backend, de `comparacion_proporcion` (rf_v5: AUC 0.994, F1 0.928).
+**Resultados:**
+- Niveles bajo/medio/alto: PRE control 28/7/0, experimental 27/4/3; POST control 8/18/9, experimental 28/5/1.
+- POST control vs experimental (todos p < 0.001): promedio t de Student d = 1.22 (12.03 vs 14.05); asistencia t de Student d = 1.55 (35.9 % vs 66.4 %); reuniones U de Mann-Whitney r = 0.50 (37.1 % vs 79.4 %); nivel de riesgo U r = 0.53. PRE comparable (p = 0.540, 0.449, 0.616, 0.817).
+- Intragrupo (Wilcoxon): el control empeora en promedio, asistencia y reuniones (p < 0.001, < 0.001, 0.039); el experimental no cambia en promedio (p = 0.061) ni asistencia (p = 0.325) y mejora en reuniones (p = 0.006, mediana 50 → 100 %).
+**Decisiones tomadas:** D13 (POST = III bimestre). Los hallazgos van a Resultados y se interpretan con cautela (grupos intactos de 3.° y 4.°, un solo bimestre, la intervención no se midió).
+**Pendientes derivados:** confirmar con el asesor la variable contrastada y Wilcoxon; validar el modelo con el `deserto` del directivo (`data/raw/2026_desenlace/`); redactar Capítulos III y IV.
+
+---
+
+### 2026-10-20 — Reversión del POST: las fichas tenían datos del II bimestre
+**Tipo:** desarrollo
+**Qué pasó:** se consolidaron y analizaron fichas POST que el autor había llenado con datos del **II bimestre** (no del POST previsto). Se revirtió todo lo derivado: `2026_post.csv` (+ excluidos y resumen) movidos a `data/processed/_descartados_ii_bimestre/`; fichas a `data/raw/_respaldos/2026_post_ii_bimestre_incorrecto/`; `stats/output/` regenerado solo con PRE; se quitaron D13 y los resultados de contraste de la documentación. Ninguno de esos resultados es válido.
+**Se conserva:** la restauración de las fichas PRE v5 sin `deserto` (ver entrada siguiente) y el borrado de Neon de EST-071 a EST-074 (alumnos de prueba; Neon queda con los 69 reales, PRE con `rf_v5`).
+**Pendientes derivados:** definir el periodo POST correcto con los datos que entregue el directivo; llenar las fichas (`momento = post`, `deserto` vacío); repetir Fase 7 y 8; guardar el `deserto` en `data/raw/2026_desenlace/`; verificar que las métricas de `6_metricas_modelo.csv` correspondan a `rf_v5`.
+
+---
+
+### 2026-10-20 — Cierre de pendientes menores antes de la entrega
+**Tipo:** desarrollo
+**Qué se hizo:** Se ubicó el PRE 2026: fichas originales en `data/raw/2026_pre/`, consolidado en `data/processed/2026_pre_v5.csv` (69 incluidos, 1 excluido), carga web en `carga_pre2026.csv` y SPSS en `spss_pre2026_v5.csv`.
+**Decisiones tomadas:**
+- El entrenamiento equilibrado a 40 % (D12, `rf_v5`) no se modifica más; el autor lo probó con alumnos nuevos y el comportamiento es adecuado. No se regenera nada por ese motivo.
+- La creación de usuarios (Fase 4) se pospone.
+- Las observaciones 1-5 de la tabla de tesis se documentan pero no se corrigen en esta etapa.
+- Al ubicar el PRE se halló que `data/raw/2026_pre/` contenía las fichas v4 (antiguas, con `deserto` 0/1; difieren de v5 en 19 valores de asistencia y 6 de reuniones). Se restauraron allí las fichas v5 (`*_2026_1.xlsx`) con `deserto` vacío; `preprocess.py` las reproduce idéntico a `2026_pre_v5.csv` (69 incluidos, 1 excluido). Las v4 quedan en `data/raw/_respaldos/2026_pre_v5_deserto_0_1_20261020/`.
+**Pendientes derivados:** incorporar los datos POST (Fase 7) y continuar con las fases 8 y 9.
+
+---
+
+### 2026-10-17 — Entrenamiento equilibrado a 40 % de desertores y modelo `rf_v5` (D12)
+**Tipo:** desarrollo
+**Feedback recibido (docente, revisión del avance):** los indicadores tan altos (0.90, 0.97) se deben a que hay más datos de una clase que de otra; al entrenar con cantidades muy alejadas, el sistema se inclina por la clase que más tiene (aquí, no desertor) y clasificaría a un alumno nuevo como no desertor. Recomendó acercar las clases (40 % - 60 % o similar) y luego crear los datos sintéticos. No indicó si reducir o aumentar; el autor lo interpreta como un entrenamiento equilibrado 40 / 60.
+**Qué se hizo:**
+- Diagnóstico: el SMOTE x2 de `rf_v3`/`rf_v4` conservaba la proporción (39 desertores / 171 no desertores en el entrenamiento, 18.6 %): el desbalance seguía igual y solo lo compensaba `class_weight="balanced"`.
+- `ml/aumento.py`: `proporcion` genera sintéticos solo de la clase minoritaria hasta una fracción objetivo (con los 70 reales, 40 % = 13 + 25 desertores sintéticos frente a 57 no desertores reales; 95 filas); `factor` agrega después refuerzo conservando la proporción; `proporcion_previa` reduce la mayoritaria antes (opción B). `train.py` y `tune.py` aceptan `--proporcion`, `--aumentar` y `--proporcion-previa`. Los sintéticos siguen solo en el entrenamiento.
+- Se corrigió un error de coma flotante (0.4/0.6 × 57 = 38.00000000000001 daba 39 y no 38).
+- `ml/comparar_proporcion.py`: CV 5x5 sobre alumnos reales de cada alternativa, con sus umbrales (resultados en `ml/models/comparacion_proporcion_historico_real.json`). Ninguna es demostrablemente mejor (F1 0.89-0.93 ± 0.12): `rf_v5` (40 %) AUC 0.994, F1 0.928, recall 1.000, precision 0.884; `rf_v3` AUC 0.993, F1 0.911, recall 0.967. Reforzar con más sintéticos no mejora (F1 0.927 con x1) y reducir la mayoritaria descarta alumnos reales y empeora (F1 0.888).
+- `rf_v5` = `--proporcion 0.40 --final`: 70 reales + 25 sintéticos. Umbral medio D9: 0.15 → **0.222** (P90 de los no desertores con el nuevo entrenamiento); el alto sigue en 0.50 (13/13 desertores, 2 falsos positivos).
+- PRE 2026 con `rf_v5`: control 28 / 7 / 0, experimental 27 / 4 / 3 (bajo / medio / alto). Solo cambia EST-038 (control): 0.535 → 0.493, de alto a medio (caso de borde).
+- Backend: `MODEL_PATH` por defecto `rf_v5` (`config.py`, `.env.example`, `.env` local, README, `API.md`) y `stats/analisis.py`. `/modelo` toma la CV 5x5 de `comparacion_proporcion_*.json` cuando el modelo usa proporción objetivo; la página del modelo lo muestra. 43 pruebas de backend y 51 de ml en verde.
+- Neon: `carga_pre2026.csv` reimportado (69 alumnos, 0 excluidos): predicciones pasaron de `rf_v4` a `rf_v5`; 55 bajo / 11 medio / 3 alto.
+- Verificación en la web (2026-10-20): el autor registró 4 alumnos de prueba y `rf_v5` respondió como se calculó de antemano: EST-071 (16.0 / 95.56 % / 100 %) < 1 % bajo; EST-072 (10.0 / 95.56 % / 100 %) 3.4 % bajo; EST-073 (14.0 / 40 % / 50 %) 32.2 % medio; EST-074 (9.5 / 20 % / 0 %) 99 % alto. El modelo no se inclina por "no desertor" y la franja media existe; la nota baja sola no sube el riesgo (el promedio pesa ≈ 0).
+- `spss_pre2026_v5.csv` regenerado con `rf_v5` (control 28 / 7 / 0, experimental 27 / 4 / 3); respaldo con `rf_v4` en `spss_pre2026_v5_rf_v4.csv`. El autor confirmó que el docente pidió el entrenamiento equilibrado 40 / 60.
+**Decisiones tomadas:** D12, el entrenamiento se equilibra a 40 % de desertores generando solo sintéticos de la clase minoritaria (SMOTE) y sin descartar alumnos reales. Se registra como limitación que la mejora no es estadísticamente demostrable con 13 desertores, y que se adoptó por la recomendación del docente y por rigor metodológico.
+**Pendientes derivados:** ⚠️ **borrar de Neon los 4 alumnos de prueba EST-071 a EST-074** (registrados como Posprueba, 3.° A, grupo Control; con sus registros y predicciones) antes de la recolección POST y del análisis, porque entrarían al resumen y a los datos POST (el resumen debe volver a 55 / 11 / 3); subir `rf_v5.joblib` y `.json` a Render en la Fase 6.
+
+---
+
+### 2026-10-10 — Diseño PRE/POST documentado y `stats/analisis.py`
+**Tipo:** desarrollo
+**Qué se hizo:**
+- `PLAN_ESTADISTICO.md` → sección "Diseño": qué son grupo control y experimental, PRE, intervención y POST en este proyecto, y reglas para que la comparación sea defendible (solo los tutores del experimental tienen cuenta; la POST cubre un periodo comparable a la PRE).
+- `stats/analisis.py` + 6 pruebas con datos simulados. Con PRE 2026 v5 reproduce la normalidad y la equivalencia ya registradas (MW p = 0.540, 0.449, 0.616) y agrega el nivel de riesgo ordinal (p = 0.864) y el tamaño del efecto r (0.02–0.09).
+- Web: probabilidades menores a 1 % se muestran como "< 1 %" (un 0 % no significa que el alumno no pueda desertar).
+**Pendientes derivados:** el autor define con la IE y el asesor la fecha de inicio y fin de la intervención y el corte de la POST.
+
+---
+
 ### 2026-10-10 — Modelo de producción `rf_v4` (D11)
 **Tipo:** desarrollo
 **Qué se hizo:**

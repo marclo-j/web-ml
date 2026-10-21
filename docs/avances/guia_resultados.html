@@ -1,0 +1,365 @@
+<title>Guía del capítulo de Resultados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600;7..72,700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: misma familia visual que la guía de estudio — índice fijo a la izquierda, columna de lectura a la derecha; los borradores de redacción van en "hoja" con serif */
+:root {
+  --papel: #f6f8fa; --hoja: #ffffff; --tinta: #1b2733; --tenue: #5a6878; --linea: #d8e0e8;
+  --acento: #1f5f8b; --acento-suave: #e3eef7; --marca: #fff4c2;
+  --listo: #2e7d4f; --listo-f: #e2f3e8; --espera: #a86a00; --espera-f: #fdf0d5; --no: #b3261e; --no-f: #fbe3e1;
+  --f-titulo: "Literata", Georgia, "Times New Roman", serif;
+  --f-texto: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --papel: #11171d; --hoja: #18212a; --tinta: #e4eaf0; --tenue: #9aa8b6; --linea: #2c3a47;
+    --acento: #7db8e3; --acento-suave: #1d3242; --marca: #4a4220;
+    --listo: #6fcf97; --listo-f: #173326; --espera: #f0b955; --espera-f: #3a2e14; --no: #f28b82; --no-f: #3d1d1b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --papel: #11171d; --hoja: #18212a; --tinta: #e4eaf0; --tenue: #9aa8b6; --linea: #2c3a47;
+  --acento: #7db8e3; --acento-suave: #1d3242; --marca: #4a4220;
+  --listo: #6fcf97; --listo-f: #173326; --espera: #f0b955; --espera-f: #3a2e14; --no: #f28b82; --no-f: #3d1d1b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--papel); color: var(--tinta); font-family: var(--f-texto); font-size: 17px; line-height: 1.6; }
+.marco { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 48px; max-width: 1160px; margin: 0 auto; padding-inline: 24px; padding-block: 32px 80px; }
+nav.indice { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; font-size: 14.5px; }
+nav.indice p { font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 12px; color: var(--tenue); margin: 0 0 10px; }
+nav.indice ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+nav.indice a { display: block; padding: 5px 10px; border-radius: 6px; color: var(--tinta); text-decoration: none; }
+nav.indice a:hover, nav.indice a:focus-visible { background: var(--acento-suave); color: var(--acento); outline: none; }
+main { min-width: 0; max-width: 760px; }
+header.portada { padding-bottom: 28px; border-bottom: 1px solid var(--linea); }
+.eyebrow { font-weight: 700; text-transform: uppercase; letter-spacing: .1em; font-size: 12.5px; color: var(--acento); margin: 0 0 8px; }
+h1, h2, h3 { font-family: var(--f-titulo); text-wrap: balance; line-height: 1.25; }
+h1 { font-size: clamp(30px, 5vw, 40px); margin: 0 0 14px; }
+h2 { font-size: 27px; margin: 0 0 6px; }
+h3 { font-size: 19px; margin: 28px 0 8px; font-weight: 600; }
+.bajada { font-size: 19px; color: var(--tenue); margin: 0; max-width: 62ch; }
+section { padding-block: 40px 8px; border-bottom: 1px solid var(--linea); scroll-margin-top: 16px; }
+section:last-of-type { border-bottom: 0; }
+.cap { font-family: var(--f-mono); font-size: 13px; color: var(--tenue); margin: 0 0 4px; }
+p { margin: 0 0 14px; }
+ul, ol { padding-left: 22px; margin: 0 0 14px; }
+li { margin-bottom: 6px; }
+code { font-family: var(--f-mono); font-size: .86em; background: var(--acento-suave); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.tabla { overflow-x: auto; margin: 6px 0 18px; border: 1px solid var(--linea); border-radius: 8px; background: var(--hoja); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--linea); vertical-align: top; }
+th { font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--tenue); background: var(--papel); }
+tr:last-child td { border-bottom: 0; }
+td.n { text-align: right; font-family: var(--f-mono); font-size: 14px; white-space: nowrap; }
+td.vacio { text-align: right; color: var(--tenue); font-family: var(--f-mono); font-size: 14px; }
+.ficha-tabla { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; margin: 26px 0 8px; }
+.ficha-tabla h3 { margin: 0; }
+.estado { font-size: 12.5px; font-weight: 700; padding: 2px 10px; border-radius: 999px; white-space: nowrap; }
+.estado.listo { background: var(--listo-f); color: var(--listo); }
+.estado.espera { background: var(--espera-f); color: var(--espera); }
+.estado.parcial { background: var(--acento-suave); color: var(--acento); }
+.borrador { background: var(--hoja); border: 1px solid var(--linea); border-left: 3px solid var(--acento); border-radius: 0 8px 8px 0; padding: 14px 18px; margin: 6px 0 18px; font-family: var(--f-titulo); font-size: 16.5px; line-height: 1.7; }
+.borrador .rot { display: block; font-family: var(--f-texto); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--tenue); margin-bottom: 6px; }
+.borrador p:last-child { margin-bottom: 0; }
+.hueco { background: var(--espera-f); color: var(--espera); padding: 0 4px; border-radius: 3px; font-family: var(--f-texto); font-size: .9em; }
+.nota { font-size: 14px; color: var(--tenue); margin: -10px 0 18px; }
+.idea, .ojo { border-radius: 8px; padding: 14px 18px; margin: 8px 0 20px; }
+.idea { background: var(--acento-suave); }
+.ojo { background: var(--espera-f); }
+.idea > strong, .ojo > strong { display: block; font-size: 13px; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 4px; }
+.idea > strong { color: var(--acento); }
+.ojo > strong { color: var(--espera); }
+.idea p:last-child, .ojo p:last-child { margin-bottom: 0; }
+.dice { border-left: 2px solid var(--linea); padding-left: 16px; margin: 0 0 14px; }
+.dice b { color: var(--acento); }
+pre.mermaid { background: var(--hoja); border: 1px solid var(--linea); border-radius: 8px; padding: 16px; overflow-x: auto; margin: 8px 0 20px; }
+@media (max-width: 900px) {
+  .marco { grid-template-columns: minmax(0, 1fr); gap: 0; padding-inline: 16px; padding-block: 20px 60px; }
+  nav.indice { position: static; background: var(--hoja); border: 1px solid var(--linea); border-radius: 8px; padding: 14px; margin-bottom: 24px; }
+  nav.indice ol { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  body { font-size: 16px; }
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+<div class="marco">
+<nav class="indice" aria-label="Índice">
+  <p>Contenido</p>
+  <ol>
+    <li><a href="#como">Cómo usar esta guía</a></li>
+    <li><a href="#diseno">El diseño, explicado</a></li>
+    <li><a href="#reglas">Reglas de redacción</a></li>
+    <li><a href="#general">Objetivo general</a></li>
+    <li><a href="#oe1">OE1 · Rendimiento</a></li>
+    <li><a href="#oe2">OE2 · Asistencia</a></li>
+    <li><a href="#oe3">OE3 · Apoyo familiar</a></li>
+    <li><a href="#fuera">Lo que no va en Resultados</a></li>
+    <li><a href="#guion">Cómo explicarlo al docente</a></li>
+    <li><a href="#pendiente">Antes de redactar</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="portada">
+  <p class="eyebrow">Material de estudio personal · capítulo III · estado al 10 de octubre de 2026</p>
+  <h1>Qué irá en Resultados y cómo explicarlo</h1>
+  <p class="bajada">El capítulo tabla por tabla: qué muestra cada una, qué datos ya tenemos, qué espera a la posprueba y un borrador de redacción con el estilo de la guía UCV.</p>
+</header>
+
+<section id="como">
+  <p class="cap">01</p>
+  <h2>Cómo usar esta guía</h2>
+  <p>Cada tabla del capítulo lleva una etiqueta:</p>
+  <ul>
+    <li><span class="estado listo">Lista</span> ya tenemos todos los datos.</li>
+    <li><span class="estado parcial">Mitad lista</span> la parte PRE está calculada y la POST espera a la posprueba.</li>
+    <li><span class="estado espera">Espera POST</span> no se puede llenar hasta tener la posprueba.</li>
+  </ul>
+  <p>Los borradores de redacción están en tiempo pasado y tercera persona, como pide la guía. Donde aparece un <span class="hueco">[hueco]</span> va un dato de la posprueba. Todas las cifras salen de <code>stats/analisis.py</code>, que exporta las tablas a <code>stats/output/</code> listas para pegar en Word.</p>
+</section>
+
+<section id="diseno">
+  <p class="cap">02</p>
+  <h2>El diseño, explicado</h2>
+  <p>Todo el capítulo se apoya en una idea: medir a dos grupos parecidos antes y después de que solo uno use la web.</p>
+  <pre class="mermaid">flowchart LR
+  P["PREPRUEBA<br/>I bimestre 2026<br/>ambos grupos"] --> I["INTERVENCIÓN<br/>solo 4.° B usa la web<br/>fechas por definir"]
+  I --> Q["POSPRUEBA<br/>mismas fichas<br/>ambos grupos"]
+  Q --> D["DESENLACE<br/>deserción real<br/>al cierre del año"]</pre>
+  <div class="tabla"><table>
+    <thead><tr><th></th><th>Grupo control · 3.° A</th><th>Grupo experimental · 4.° B</th></tr></thead>
+    <tbody>
+      <tr><td>Preprueba</td><td>Se mide (35)</td><td>Se mide (34)</td></tr>
+      <tr><td>Intervención</td><td>Seguimiento habitual, sin cuenta en la web</td><td>Los tutores usan la web y actúan con las alertas</td></tr>
+      <tr><td>Posprueba</td><td>Se mide</td><td>Se mide</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Por qué se puede atribuir el cambio a la web.</strong> En la preprueba ya se comprobó que los grupos no se diferencian en ningún indicador ni en el nivel de riesgo. Si en la posprueba el experimental está mejor y el control no, lo único distinto entre ambos fue el uso de la web.</p>
+  <p><strong>Por qué es “cuasi” experimental.</strong> En un experimento puro los alumnos se sortean entre grupos. Aquí se usaron secciones ya formadas (grupos intactos), por eso es tan importante haber demostrado la equivalencia inicial. Es una limitación que se declara, no un error.</p>
+  <div class="ojo">
+    <strong>La fecha de la posprueba</strong>
+    <p>Todavía no está definida y está bien: se decide con la IE y el asesor. Lo que sí debe cumplirse es que la posprueba use las mismas fichas y fórmulas, y cubra un periodo comparable a la preprueba (idealmente un bimestre completo de intervención). Cuando la fijes, se registra en el LOG junto con el inicio y fin de la intervención.</p>
+  </div>
+</section>
+
+<section id="reglas">
+  <p class="cap">03</p>
+  <h2>Reglas de redacción del capítulo</h2>
+  <ul>
+    <li>Orden fijo: objetivo general, luego OE1, OE2 y OE3.</li>
+    <li>Cada resultado es una tabla o figura más un párrafo breve que la interpreta, en tiempo pasado.</li>
+    <li>Sin subtítulos, viñetas ni negritas dentro del texto. Las abreviaturas van en una nota debajo de la tabla.</li>
+    <li>El párrafo no repite toda la tabla: destaca el dato clave y la decisión estadística.</li>
+    <li>Mínimo 4 páginas. Citas en formato IEEE.</li>
+    <li>Los valores p que salen 0.000 se escriben “p &lt; 0.001”.</li>
+  </ul>
+  <p>Plantilla para cada contraste: “En la Tabla N se observó que, en la posprueba, el grupo experimental obtuvo [dato] frente a [dato] del grupo control. La prueba U de Mann-Whitney arrojó un valor p de [valor], inferior a 0.05, por lo que se rechazó la hipótesis nula y se aceptó que [hipótesis].”</p>
+</section>
+
+<section id="general">
+  <p class="cap">04 · Objetivo general e hipótesis general</p>
+  <h2>Determinar en qué medida la web permite establecer el nivel de riesgo</h2>
+  <p>Esta parte tiene dos tipos de evidencia: cómo se distribuyen los niveles de riesgo en los grupos (y si cambian tras la intervención) y qué tan bien clasifica el modelo.</p>
+
+  <div class="ficha-tabla"><h3>Tabla 1. Nivel de riesgo por grupo y momento</h3><span class="estado parcial">Mitad lista</span></div>
+  <div class="tabla"><table>
+    <thead><tr><th>Grupo · momento</th><th>Bajo</th><th>Medio</th><th>Alto</th></tr></thead>
+    <tbody>
+      <tr><td>Control · pre (n = 35)</td><td class="n">28 (80.0 %)</td><td class="n">6 (17.1 %)</td><td class="n">1 (2.9 %)</td></tr>
+      <tr><td>Experimental · pre (n = 34)</td><td class="n">27 (79.4 %)</td><td class="n">4 (11.8 %)</td><td class="n">3 (8.8 %)</td></tr>
+      <tr><td>Control · post</td><td class="vacio">—</td><td class="vacio">—</td><td class="vacio">—</td></tr>
+      <tr><td>Experimental · post</td><td class="vacio">—</td><td class="vacio">—</td><td class="vacio">—</td></tr>
+    </tbody>
+  </table></div>
+  <div class="borrador"><span class="rot">Borrador</span>
+    <p>En la Tabla 1 se observó que, en la preprueba, el 80.0 % de los estudiantes del grupo control y el 79.4 % del grupo experimental se ubicaron en el nivel de riesgo bajo, mientras que el nivel alto concentró al 2.9 % y al 8.8 %, respectivamente. En la posprueba, el grupo experimental presentó <span class="hueco">[% alto y medio post]</span> frente a <span class="hueco">[%]</span> del grupo control.</p>
+  </div>
+
+  <div class="ficha-tabla"><h3>Tabla 2. Desempeño del modelo Random Forest</h3><span class="estado listo">Lista</span></div>
+  <div class="tabla"><table>
+    <thead><tr><th>Métrica</th><th>Media</th><th>Desviación estándar</th></tr></thead>
+    <tbody>
+      <tr><td>Accuracy</td><td class="n">0.966</td><td class="n">0.050</td></tr>
+      <tr><td>Precision</td><td class="n">0.893</td><td class="n">0.180</td></tr>
+      <tr><td>Recall</td><td class="n">0.967</td><td class="n">0.116</td></tr>
+      <tr><td>F1</td><td class="n">0.911</td><td class="n">0.128</td></tr>
+      <tr><td>AUC-ROC</td><td class="n">0.993</td><td class="n">0.015</td></tr>
+    </tbody>
+  </table></div>
+  <p class="nota">Nota: validación cruzada estratificada repetida 5x5 sobre los 70 estudiantes del histórico 2024; evaluación solo con registros reales.</p>
+  <div class="borrador"><span class="rot">Borrador</span>
+    <p>En la Tabla 2 se observó que el modelo Random Forest, evaluado mediante validación cruzada estratificada repetida 5x5 sobre los 70 estudiantes del registro histórico, alcanzó un recall de 0.967, lo que indicó que identificó en promedio al 96.7 % de los estudiantes que desertaron, con una precisión de 0.893 y un valor F1 de 0.911. El área bajo la curva ROC fue de 0.993.</p>
+  </div>
+
+  <div class="ficha-tabla"><h3>Tabla 3. Matriz de confusión</h3><span class="estado listo">Lista</span></div>
+  <div class="tabla"><table>
+    <thead><tr><th></th><th>Predicho: no deserta</th><th>Predicho: deserta</th></tr></thead>
+    <tbody>
+      <tr><td>Real: no desertó</td><td class="n">10</td><td class="n">1</td></tr>
+      <tr><td>Real: desertó</td><td class="n">0</td><td class="n">3</td></tr>
+    </tbody>
+  </table></div>
+  <p class="nota">Nota: conjunto de prueba del 20 % (14 estudiantes, 3 desertores).</p>
+  <div class="borrador"><span class="rot">Borrador</span>
+    <p>En la Tabla 3 se observó que, en el conjunto de prueba, el modelo clasificó correctamente a los 3 estudiantes que desertaron y a 10 de los 11 que no desertaron, con un único falso positivo y ningún falso negativo.</p>
+  </div>
+
+  <div class="ficha-tabla"><h3>Tabla 4. Contraste de la hipótesis general (nivel de riesgo)</h3><span class="estado parcial">Mitad lista</span></div>
+  <div class="tabla"><table>
+    <thead><tr><th>Momento</th><th>Prueba</th><th>U</th><th>p</th><th>r</th><th>Decisión</th></tr></thead>
+    <tbody>
+      <tr><td>Pre</td><td>Mann-Whitney</td><td class="n">584.5</td><td class="n">0.864</td><td class="n">0.02</td><td>No se rechaza H0</td></tr>
+      <tr><td>Post</td><td>Mann-Whitney</td><td class="vacio">—</td><td class="vacio">—</td><td class="vacio">—</td><td class="vacio">—</td></tr>
+    </tbody>
+  </table></div>
+  <p>El nivel de riesgo es ordinal (bajo &lt; medio &lt; alto), así que va directo a Mann-Whitney, sin prueba de normalidad.</p>
+  <div class="borrador"><span class="rot">Borrador</span>
+    <p>En la Tabla 4 se observó que, en la preprueba, no existió diferencia significativa en el nivel de riesgo entre el grupo control y el experimental (U = 584.5; p = 0.864), lo que confirmó que ambos grupos partieron de condiciones equivalentes. En la posprueba, la prueba U de Mann-Whitney arrojó un valor p de <span class="hueco">[p post]</span>, por lo que <span class="hueco">[se rechazó / no se rechazó]</span> la hipótesis nula.</p>
+  </div>
+  <div class="ojo">
+    <strong>Pregunta abierta con el asesor</strong>
+    <p>Si la variable que se contrasta para la hipótesis general es el nivel de riesgo (como está planteado) y si se agrega la comparación PRE vs POST dentro de cada grupo con Wilcoxon. El script ya la calcula con <code>--intragrupo</code> cuando haya datos POST.</p>
+  </div>
+</section>
+
+<section id="oe1">
+  <p class="cap">05 · OE1 · H1</p>
+  <h2>Rendimiento académico (promedio de calificaciones)</h2>
+  <p>Cada objetivo específico repite el mismo patrón de cuatro tablas: descriptivos, normalidad, contraste e importancia de la variable en el modelo.</p>
+
+  <div class="ficha-tabla"><h3>Tabla 5. Descriptivos del promedio</h3><span class="estado parcial">Mitad lista</span></div>
+  <div class="tabla"><table>
+    <thead><tr><th>Grupo · momento</th><th>n</th><th>Media</th><th>DE</th><th>Mín.</th><th>Máx.</th><th>Mediana</th></tr></thead>
+    <tbody>
+      <tr><td>Control · pre</td><td class="n">35</td><td class="n">14.75</td><td class="n">2.43</td><td class="n">7.60</td><td class="n">17.90</td><td class="n">15.50</td></tr>
+      <tr><td>Experimental · pre</td><td class="n">34</td><td class="n">15.00</td><td class="n">2.27</td><td class="n">8.00</td><td class="n">17.40</td><td class="n">15.80</td></tr>
+      <tr><td>Control · post</td><td class="vacio">—</td><td class="vacio">—</td><td class="vacio">—</td><td class="vacio">—</td><td class="vacio">—</td><td class="vacio">—</td></tr>
+      <tr><td>Experimental · post</td><td class="vacio">—</td><td class="vacio">—</td><td class="vacio">—</td><td class="vacio">—</td><td class="vacio">—</td><td class="vacio">—</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="ficha-tabla"><h3>Tabla 6. Normalidad del promedio</h3><span class="estado parcial">Mitad lista</span></div>
+  <div class="tabla"><table>
+    <thead><tr><th>Grupo · momento</th><th>K-S</th><th>gl</th><th>Sig.</th><th>S-W</th><th>gl</th><th>Sig.</th></tr></thead>
+    <tbody>
+      <tr><td>Pre – Control</td><td class="n">0.264</td><td class="n">35</td><td class="n">0.001</td><td class="n">0.799</td><td class="n">35</td><td class="n">&lt; 0.001</td></tr>
+      <tr><td>Pre – Experimental</td><td class="n">0.283</td><td class="n">34</td><td class="n">0.001</td><td class="n">0.753</td><td class="n">34</td><td class="n">&lt; 0.001</td></tr>
+    </tbody>
+  </table></div>
+  <p class="nota">Nota: K-S con corrección de Lilliefors; la decisión se toma con Shapiro-Wilk (n &lt; 50). En statsmodels, el p de Lilliefors tiene 0.001 como valor mínimo.</p>
+
+  <div class="ficha-tabla"><h3>Tabla 7. Contraste de H1</h3><span class="estado parcial">Mitad lista</span></div>
+  <div class="tabla"><table>
+    <thead><tr><th>Momento</th><th>Prueba</th><th>U</th><th>p</th><th>r</th><th>Decisión</th></tr></thead>
+    <tbody>
+      <tr><td>Pre</td><td>Mann-Whitney</td><td class="n">543.5</td><td class="n">0.540</td><td class="n">0.07</td><td>No se rechaza H0</td></tr>
+      <tr><td>Post</td><td class="vacio">según normalidad</td><td class="vacio">—</td><td class="vacio">—</td><td class="vacio">—</td><td class="vacio">—</td></tr>
+    </tbody>
+  </table></div>
+  <div class="borrador"><span class="rot">Borrador</span>
+    <p>En la Tabla 6 se observó que el promedio de calificaciones no siguió una distribución normal en ninguno de los grupos de la preprueba (Shapiro-Wilk, p &lt; 0.001), por lo que el contraste se realizó con la prueba U de Mann-Whitney. En la Tabla 7 se observó que, en la preprueba, no existió diferencia significativa entre los grupos (p = 0.540). En la posprueba, el grupo experimental obtuvo una mediana de <span class="hueco">[valor]</span> frente a <span class="hueco">[valor]</span> del grupo control (p = <span class="hueco">[p]</span>).</p>
+  </div>
+
+  <div class="ficha-tabla"><h3>Tabla 8. Importancia de las variables en el modelo</h3><span class="estado listo">Lista</span></div>
+  <div class="tabla"><table>
+    <thead><tr><th>Dimensión</th><th>Permutación (reportada)</th><th>Gini (MDI)</th></tr></thead>
+    <tbody>
+      <tr><td>Rendimiento académico (promedio)</td><td class="n">−0.02 ≈ 0</td><td class="n">0.12</td></tr>
+      <tr><td>Asistencia escolar</td><td class="n">0.42</td><td class="n">0.59</td></tr>
+      <tr><td>Apoyo familiar (reuniones)</td><td class="n">0.33</td><td class="n">0.29</td></tr>
+    </tbody>
+  </table></div>
+  <p>Esta tabla se presenta una sola vez (puede ir aquí o en el objetivo general) y se cita en cada OE.</p>
+  <div class="ojo">
+    <strong>El punto delicado de OE1</strong>
+    <p>El promedio pesa casi cero en el modelo. No significa que no importe: en el histórico los desertores tuvieron peor promedio (p = 0.003), pero esa información ya la aportan la asistencia y las reuniones. En Resultados se reporta tal cual; la explicación va en la Discusión. Si la posprueba no mostrara diferencia en el promedio, H1 podría no aceptarse, y eso también es un resultado válido.</p>
+  </div>
+  <div class="borrador"><span class="rot">Borrador</span>
+    <p>En la Tabla 8 se observó que, según la importancia por permutación, el promedio de calificaciones presentó una contribución cercana a cero en la predicción del modelo (−0.02), frente a 0.42 del porcentaje de asistencia y 0.33 de la asistencia a reuniones de padres.</p>
+  </div>
+</section>
+
+<section id="oe2">
+  <p class="cap">06 · OE2 · H2</p>
+  <h2>Asistencia escolar (% de asistencia)</h2>
+  <div class="ficha-tabla"><h3>Tablas 9 a 11. Descriptivos, normalidad y contraste</h3><span class="estado parcial">Mitad lista</span></div>
+  <div class="tabla"><table>
+    <thead><tr><th>Pre</th><th>n</th><th>Media</th><th>DE</th><th>Mediana</th><th>S-W p</th><th>Normal</th></tr></thead>
+    <tbody>
+      <tr><td>Control</td><td class="n">35</td><td class="n">63.30</td><td class="n">28.09</td><td class="n">71.11</td><td class="n">0.021</td><td>No</td></tr>
+      <tr><td>Experimental</td><td class="n">34</td><td class="n">60.91</td><td class="n">21.00</td><td class="n">62.22</td><td class="n">0.236</td><td>Sí</td></tr>
+    </tbody>
+  </table></div>
+  <p>Contraste PRE: Mann-Whitney U = 658.5, p = 0.449, r = 0.09. No se rechaza H0.</p>
+  <div class="borrador"><span class="rot">Borrador</span>
+    <p>En la Tabla 10 se observó que el porcentaje de asistencia se distribuyó de forma normal en el grupo experimental (p = 0.236), pero no en el grupo control (p = 0.021); al no cumplirse la normalidad en uno de los grupos, se empleó la prueba U de Mann-Whitney. En la preprueba no existió diferencia significativa entre los grupos (p = 0.449). En la posprueba <span class="hueco">[resultado]</span>.</p>
+  </div>
+  <div class="idea">
+    <strong>Por qué Mann-Whitney si un grupo es normal</strong>
+    <p>La t de Student exige que los dos grupos sean normales. Basta con que uno no lo sea para usar Mann-Whitney. En la posprueba la normalidad se vuelve a revisar y la prueba puede cambiar; el script elige solo.</p>
+  </div>
+  <p>Importancia en el modelo: es la dimensión que más pesa (0.42 por permutación).</p>
+</section>
+
+<section id="oe3">
+  <p class="cap">07 · OE3 · H3</p>
+  <h2>Apoyo familiar (% asistencia a reuniones de padres)</h2>
+  <div class="ficha-tabla"><h3>Tablas 12 a 14. Descriptivos, normalidad y contraste</h3><span class="estado parcial">Mitad lista</span></div>
+  <div class="tabla"><table>
+    <thead><tr><th>Pre</th><th>n</th><th>Media</th><th>DE</th><th>Mediana</th><th>S-W p</th><th>Normal</th></tr></thead>
+    <tbody>
+      <tr><td>Control</td><td class="n">35</td><td class="n">57.14</td><td class="n">34.60</td><td class="n">50.00</td><td class="n">&lt; 0.001</td><td>No</td></tr>
+      <tr><td>Experimental</td><td class="n">34</td><td class="n">52.94</td><td class="n">34.69</td><td class="n">50.00</td><td class="n">&lt; 0.001</td><td>No</td></tr>
+    </tbody>
+  </table></div>
+  <p>Contraste PRE: Mann-Whitney U = 633.5, p = 0.616, r = 0.06. No se rechaza H0.</p>
+  <div class="borrador"><span class="rot">Borrador</span>
+    <p>En la Tabla 13 se observó que el porcentaje de asistencia a reuniones de padres no siguió una distribución normal en ninguno de los grupos (p &lt; 0.001), por lo que se aplicó la prueba U de Mann-Whitney, que no mostró diferencias en la preprueba (p = 0.616). En la posprueba <span class="hueco">[resultado]</span>.</p>
+  </div>
+  <p>Este indicador solo toma pocos valores (con 2 reuniones: 0 %, 50 % o 100 %), por eso nunca será normal. Es esperable y se justifica así si lo preguntan. Importancia en el modelo: 0.33, la segunda dimensión.</p>
+</section>
+
+<section id="fuera">
+  <p class="cap">08</p>
+  <h2>Lo que no va en Resultados</h2>
+  <div class="tabla"><table>
+    <thead><tr><th>Contenido</th><th>Dónde va</th></tr></thead>
+    <tbody>
+      <tr><td>Datos sintéticos de SMOTE y la comparación con CTGAN</td><td>Metodología (técnica, factor, n reales / sintéticos) y Limitaciones; los sintéticos pueden ir en un anexo, nunca como hallazgo</td></tr>
+      <tr><td>Descripción del histórico 2024 (70 alumnos, 13 desertores, desertores vs no desertores)</td><td>Metodología, como descripción de los datos de entrenamiento. Confirmar con el asesor si también la quiere en Resultados</td></tr>
+      <tr><td>rf_v0, rf_v0b, rf_v1, rf_v2 y versiones anteriores de fichas</td><td>En ningún capítulo: fueron pruebas del pipeline o datos descartados</td></tr>
+      <tr><td>Cómo se fijaron los umbrales 0.15 y 0.50</td><td>Metodología</td></tr>
+      <tr><td>Por qué el promedio pesa poco, comparación con antecedentes</td><td>Discusión (capítulo IV)</td></tr>
+      <tr><td>Arquitectura de la web, Neon, autenticación</td><td>Metodología o anexo técnico, según la guía de la escuela</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="guion">
+  <p class="cap">09</p>
+  <h2>Cómo explicarlo al docente</h2>
+  <p>Un guion corto para cuando te pregunte por el diseño o vea la web:</p>
+  <p class="dice"><b>Diseño.</b> “Trabajo con dos secciones intactas: 4.° B es el grupo experimental, cuyos tutores usan la web, y 3.° A es el control, con el seguimiento habitual. A ambos los mido antes y después de la intervención con las mismas tres fichas.”</p>
+  <p class="dice"><b>Equivalencia.</b> “En la preprueba comprobé con Mann-Whitney que los grupos no difieren en ningún indicador ni en el nivel de riesgo, todos con p mayor a 0.05. Eso permite atribuir a la web las diferencias que aparezcan en la posprueba.”</p>
+  <p class="dice"><b>La web.</b> “Lo que ve aquí es la preprueba: datos del I bimestre. La web clasifica a ambos grupos porque yo necesito medirlos a los dos, pero solo los tutores del experimental tienen acceso durante la intervención. Cuando cargue la posprueba, cada alumno tendrá un segundo registro y se podrán comparar.”</p>
+  <p class="dice"><b>El modelo.</b> “Aprendió de 70 alumnos de 2024 cuyo desenlace se conoce. Evaluado solo con alumnos reales, detectó al 96.7 % de los que desertaron. La asistencia y las reuniones de padres son las dimensiones que más pesan.”</p>
+  <p class="dice"><b>Los sintéticos.</b> “Como solo había 13 desertores, completé el entrenamiento con datos sintéticos generados por SMOTE, como usted indicó. Nunca los usé para evaluar: todas las métricas se calcularon con alumnos reales.”</p>
+</section>
+
+<section id="pendiente">
+  <p class="cap">10</p>
+  <h2>Antes de redactar</h2>
+  <ul>
+    <li>Fijar con la IE y el asesor la fecha de inicio y fin de la intervención y el corte de la posprueba.</li>
+    <li>Confirmar con el asesor la variable contrastada para la hipótesis general y si agrega Wilcoxon PRE vs POST.</li>
+    <li>Preguntar si la descripción del histórico va en Metodología o también en Resultados.</li>
+    <li>Recolectar la posprueba y correr <code>stats/analisis.py --pre … --post …</code>: llena todas las celdas vacías de esta guía.</li>
+    <li>Agregar a Referencias: Chawla et al. (SMOTE), Xu et al. (CTGAN) y Balfanz y Byrnes [42].</li>
+  </ul>
+</section>
+</main>
+</div>

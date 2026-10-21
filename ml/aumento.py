@@ -10,7 +10,9 @@ Aumento de datos del histórico, decisión D8 de docs/MODELO.md. Dos métodos:
   Un generador crea registros y un discriminador intenta distinguirlos de los
   reales; se muestrea condicionando por `deserto`.
 
-Ambos conservan la proporción de desertores y el rango de cada indicador.
+Ambos conservan el rango de cada indicador. Por defecto (factor) conservan la
+proporción de desertores; con `proporcion` (D12) solo se aumenta la clase
+minoritaria hasta equilibrar el entrenamiento (p. ej. 40 % desertores).
 
 Regla metodológica: el aumento solo se aplica a los datos con los que el
 modelo se entrena (cada partición de entrenamiento de la validación cruzada y
@@ -18,6 +20,8 @@ el 80 % del holdout). Las métricas se calculan siempre sobre alumnos reales;
 si se evaluara sobre sintéticos, el modelo se calificaría con datos que salen
 de su propio conjunto de entrenamiento y las métricas saldrían infladas.
 """
+
+import math
 
 import numpy as np
 import pandas as pd
@@ -44,15 +48,40 @@ def generar_sinteticos(
     k: int = K_VECINOS,
     semilla: int = 42,
     metodo: str = "smote",
+    proporcion: float | None = None,
 ) -> tuple[pd.DataFrame, pd.Series]:
-    """Devuelve solo los registros sintéticos: round(factor × n) por clase."""
+    """Devuelve solo los registros sintéticos.
+
+    Con `factor`: round(factor × n) por clase (conserva la proporción).
+    Con `proporcion` (D12), en dos etapas: 1) se equilibra, generando solo
+    la clase minoritaria hasta que sea esa fracción del total; 2) se refuerza
+    el entrenamiento con `factor` × (tamaño de cada clase ya equilibrada) más,
+    de modo que la proporción se conserva. Todo se interpola desde alumnos
+    reales (nunca sintético desde sintético).
+    """
     if metodo not in METODOS:
         raise ValueError(f"método de aumento {metodo!r} no es uno de {METODOS}")
+    if proporcion is not None and not 0 < proporcion < 1:
+        raise ValueError("la proporción objetivo debe estar entre 0 y 1 (exclusivo)")
     x = pd.DataFrame(x).reset_index(drop=True)
     y = pd.Series(y).reset_index(drop=True)
-    por_clase = {
-        clase: round(factor * int((y == clase).sum())) for clase in sorted(y.unique())
-    }
+    if proporcion is None:
+        por_clase = {
+            clase: round(factor * int((y == clase).sum()))
+            for clase in sorted(y.unique())
+        }
+    else:
+        conteo = y.value_counts()
+        minoritaria, mayoritaria = conteo.idxmin(), conteo.max()
+        # n_min' / (n_min' + n_may) = proporcion  →  n_min' = p/(1-p) × n_may
+        meta = math.ceil(round(proporcion / (1 - proporcion) * mayoritaria, 9))
+        meta_por_clase = {
+            minoritaria: round((1 + factor) * max(meta, int(conteo.min()))),
+            conteo.idxmax(): round((1 + factor) * int(mayoritaria)),
+        }
+        por_clase = {
+            c: meta_por_clase[c] - int(conteo[c]) for c in sorted(meta_por_clase)
+        }
     por_clase = {c: n for c, n in por_clase.items() if n > 0 and (y == c).sum() >= 2}
     if not por_clase:
         return x.iloc[:0].copy(), y.iloc[:0].copy()
@@ -68,6 +97,29 @@ def generar_sinteticos(
             sinteticos[columna] = sinteticos[columna].clip(minimo, maximo).round(2)
     etiquetas = np.concatenate([np.full(n, c) for c, n in por_clase.items()])
     return sinteticos, pd.Series(etiquetas, name=y.name).astype(int)
+
+
+def submuestrear_mayoritaria(
+    x: pd.DataFrame, y: pd.Series, proporcion_previa: float, semilla: int = 42
+) -> tuple[pd.DataFrame, pd.Series]:
+    """Acerca las clases quitando al azar alumnos de la mayoritaria (opción B).
+
+    Deja la minoritaria completa y la mayoritaria en el tamaño que da
+    `proporcion_previa` de minoritarios. Si ya se cumple, no quita a nadie.
+    """
+    if not 0 < proporcion_previa < 1:
+        raise ValueError("la proporción previa debe estar entre 0 y 1 (exclusivo)")
+    conteo = y.value_counts()
+    mayoritaria, minoritaria = conteo.idxmax(), conteo.idxmin()
+    n_may = round(conteo.min() * (1 - proporcion_previa) / proporcion_previa)
+    if n_may >= conteo.max():
+        return x, y
+    rng = np.random.default_rng(semilla)
+    mantener = rng.choice(
+        np.flatnonzero((y == mayoritaria).to_numpy()), n_may, replace=False
+    )
+    idx = np.sort(np.concatenate([np.flatnonzero((y == minoritaria).to_numpy()), mantener]))
+    return x.iloc[idx].reset_index(drop=True), y.iloc[idx].reset_index(drop=True)
 
 
 def _smote(x, y, por_clase, k, semilla) -> list[np.ndarray]:
@@ -130,18 +182,31 @@ class RFAumentado(ClassifierMixin, BaseEstimator):
         semilla=42,
         hiperparametros=None,
         metodo="smote",
+        proporcion=None,
+        proporcion_previa=None,
     ):
         self.factor = factor
         self.k_vecinos = k_vecinos
         self.semilla = semilla
         self.hiperparametros = hiperparametros
         self.metodo = metodo
+        self.proporcion = proporcion
+        self.proporcion_previa = proporcion_previa
 
     def fit(self, x, y):
         x = pd.DataFrame(x).reset_index(drop=True)
         y = pd.Series(y).reset_index(drop=True)
+        self.n_reales_disponibles_ = len(x)
+        if self.proporcion_previa is not None:
+            x, y = submuestrear_mayoritaria(x, y, self.proporcion_previa, self.semilla)
         x_sint, y_sint = generar_sinteticos(
-            x, y, self.factor, self.k_vecinos, self.semilla, self.metodo
+            x,
+            y,
+            self.factor,
+            self.k_vecinos,
+            self.semilla,
+            self.metodo,
+            self.proporcion,
         )
         self.n_reales_ = len(x)
         self.n_sinteticos_ = len(x_sint)

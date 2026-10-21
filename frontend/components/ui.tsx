@@ -98,6 +98,9 @@ export function formatoPct(valor: number) {
   return `${valor.toLocaleString("es-PE", { maximumFractionDigits: 2 })} %`;
 }
 
+// Bajo 1 % se muestra "< 1 %": un 0 % (ningún árbol votó "deserta") no
+// significa que el alumno no pueda desertar.
 export function formatoProbabilidad(valor: number) {
+  if (valor < 0.01) return "< 1 %";
   return `${(valor * 100).toLocaleString("es-PE", { maximumFractionDigits: 1 })} %`;
 }

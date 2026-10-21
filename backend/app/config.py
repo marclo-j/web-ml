@@ -35,7 +35,7 @@ class Config:
 
 def leer_config() -> Config:
     _cargar_env(Path(__file__).resolve().parents[1] / ".env")
-    ruta_modelo = Path(os.getenv("MODEL_PATH", "ml/models/rf_v4.joblib"))
+    ruta_modelo = Path(os.getenv("MODEL_PATH", "ml/models/rf_v5.joblib"))
     if not ruta_modelo.is_absolute():
         ruta_modelo = RAIZ_REPO / ruta_modelo
     return Config(

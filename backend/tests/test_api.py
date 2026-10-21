@@ -206,3 +206,23 @@ def test_importar_seccion_distinta_a_la_registrada(cliente):
 def test_importar_csv_sin_columnas(cliente):
     r = _importar(cliente, "codigo,grado\nEST-001,4\n")
     assert r.status_code == 422 and "Faltan columnas" in r.json()["detail"]
+
+
+def test_modelo_lee_cv_del_equilibrado_d12(crear_cliente, ruta_modelo, tmp_path):
+    """Con proporcion_objetivo, la CV 5x5 sale de comparacion_proporcion_*.json."""
+    import json
+    import shutil
+
+    shutil.copy(ruta_modelo, tmp_path / "rf_d12.joblib")
+    meta = json.loads(ruta_modelo.with_suffix(".json").read_text(encoding="utf-8"))
+    meta["aumento"] = {"metodo": "smote", "factor": 0, "proporcion_objetivo": 0.4}
+    (tmp_path / "rf_d12.json").write_text(json.dumps(meta), encoding="utf-8")
+    cv = {"f1": {"media": 0.93, "desviacion": 0.11}}
+    (tmp_path / "comparacion_proporcion_sintetico.json").write_text(
+        json.dumps({"configuraciones": {"proporcion_0.40": {"metricas": cv}}}),
+        encoding="utf-8",
+    )
+    c = crear_cliente(model_path=tmp_path / "rf_d12.joblib")
+    crear_usuario(c)
+    c.headers["Authorization"] = f"Bearer {iniciar_sesion(c).json()['access_token']}"
+    assert c.get("/modelo").json()["metricas"]["cv_5x5_sobre_reales"] == cv

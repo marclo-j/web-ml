@@ -29,7 +29,7 @@ Archivo: `data/processed/historico.csv` (copia de `2024_pre_v5.csv`; la versión
 | Fuente | Fichas 2024 de la IE (I bimestre, mismo corte que PRE 2026, D3) |
 | Registros / incluidos / excluidos | 70 / 70 / 0 (sin traslados, dimensiones incompletas ni registros inconsistentes) |
 | Desertores | 13 (18.6 %): 3.° A 6 de 35, 4.° B 7 de 35 |
-| Balance | 57 : 13 (≈ 4.4 : 1) → `class_weight="balanced"` + SMOTE x2 en entrenamiento (D8) |
+| Balance | 57 : 13 (≈ 4.4 : 1) → `class_weight="balanced"` + entrenamiento equilibrado a 40 % de desertores con SMOTE solo sobre desertores (D12). Antes (D8, `rf_v3`/`rf_v4`): SMOTE x2 que conservaba el 18.6 % |
 | Datos crudos | 10 notas por alumno, 45 días programados, 2 reuniones programadas (iguales para todos) |
 
 Desertores frente a no desertores (mediana y RIC; U de Mann-Whitney, porque al menos un grupo no es normal en cada indicador; r = correlación biserial de rangos):
@@ -72,6 +72,20 @@ Script: `ml/etiquetar_umbral.py --entrada data/processed/2026_pre.csv --salida d
 - Falta agregar las referencias de SMOTE (Chawla et al., 2002) y CTGAN (Xu et al., 2019) a la lista IEEE de la tesis al redactar Metodología.
 - Base real (2026-10-09): solo 2024 v5 (70 alumnos, 13 desertores); 2025 se descarta. El histórico se completa con aumento, no con un año ficticio.
 
+**Equilibrio de clases en el entrenamiento (decisión D12, 2026-10-17):** el docente observó que entrenar con muchos no desertores y pocos desertores sesga al modelo hacia la clase mayoritaria (un alumno nuevo saldría como no desertor) y recomendó acercar las clases a 40 % - 60 % y luego generar los sintéticos. El SMOTE x2 de D8 conservaba la proporción (39 desertores / 171 no desertores en el entrenamiento, 18.6 %), así que no corregía el desbalance. Con D12, `ml/train.py --proporcion 0.40` genera con SMOTE solo desertores sintéticos hasta que sean 40 % del entrenamiento: con los 70 reales, 13 reales + 25 sintéticos frente a 57 no desertores reales (95 filas, 40 % / 60 %). Reglas:
+- No se descarta ningún alumno real ni se generan sintéticos de no desertores. Todo se interpola desde alumnos reales de la misma clase.
+- El equilibrio se recalcula dentro de cada partición de entrenamiento de la CV y del holdout; las métricas siguen siendo solo sobre alumnos reales.
+- Alternativas evaluadas con la misma CV 5x5 (`ml/comparar_proporcion.py`, `ml/models/comparacion_proporcion_historico_real.json`): reforzar después con más sintéticos de ambas clases (`--aumentar F` junto a `--proporcion`, F1 0.927 con x1), reducir antes la clase mayoritaria (`--proporcion-previa`, F1 0.888 y descarta reales) y no aumentar. Todas dentro del ruido (F1 0.89 - 0.93 ± 0.12; 13 desertores reales); se adopta el equilibrado simple por seguir la recomendación del docente sin descartar datos ni depender más de los sintéticos (25 de 95 filas).
+- Se declara en Metodología (técnica SMOTE [Chawla et al., 2002], proporción objetivo, n reales / n sintéticos) y en Limitaciones: la mejora frente a `rf_v3` no es estadísticamente demostrable con 13 desertores. Los sintéticos quedan en `data/processed/sinteticos_rf_v5.csv`.
+
+| Configuración (CV 5x5 sobre reales) | AUC | F1 | Recall | Precision | Umbral medio (P90) |
+|---|---|---|---|---|---|
+| Sin aumento | 0.994 | 0.927 | 1.000 | 0.883 | 0.297 |
+| SMOTE x2 (`rf_v3`, 18.6 %) | 0.993 | 0.911 | 0.967 | 0.893 | 0.152 |
+| **Equilibrado 40 % (`rf_v5`)** | 0.994 | 0.928 | 1.000 | 0.884 | 0.222 |
+| Equilibrado 40 % + refuerzo x1 | 0.997 | 0.927 | 1.000 | 0.883 | 0.181 |
+| Reducir a 28 %, equilibrar 40 % + x1 | 0.989 | 0.888 | 0.980 | 0.831 | 0.282 |
+
 ## Configuración inicial
 ```python
 RandomForestClassifier(
@@ -103,11 +117,13 @@ Búsqueda de hiperparámetros (opcional, grilla pequeña por el tamaño de datos
 
 Opcional: ROC-AUC (aparece en los antecedentes [3], [14] y sirve para la Discusión).
 
-## Umbrales de nivel de riesgo (decisión D9, 2026-10-10)
+## Umbrales de nivel de riesgo (decisión D9, 2026-10-10; medio actualizado por D12, 2026-10-17)
+> Con `rf_v5` (entrenamiento equilibrado a 40 %, D12) el umbral medio pasó de 0.15 a **0.222**: al subir la proporción de desertores en el entrenamiento suben las probabilidades de todos, y el P90 de los no desertores sube de 0.152 a 0.222. El alto no cambia. Lo que sigue describe el criterio y los valores de D9 con `rf_v3`/`rf_v4`.
+
 | Probabilidad | Nivel | Color UI |
 |---|---|---|
-| < 0.15 | Bajo | 🟢 |
-| 0.15 – < 0.50 | Medio | 🟡 |
+| < 0.222 | Bajo | 🟢 |
+| 0.222 – < 0.50 | Medio | 🟡 |
 | ≥ 0.50 | Alto | 🔴 |
 
 Criterio, a partir de las probabilidades fuera de muestra del histórico (cada alumno 2024 predicho por modelos que no lo vieron; CV 5x5 con SMOTE, configuración de `rf_v3`):
@@ -117,7 +133,20 @@ Criterio, a partir de las probabilidades fuera de muestra del histórico (cada a
 
 Distribución en PRE 2026 con `rf_v4` (modelo en producción): control 28 / 6 / 1, experimental 27 / 4 / 3 (bajo / medio / alto). Con `rf_v3` era control 27 / 7 / 1 y experimental 27 / 4 / 3; solo cambia un alumno de control (EST-056, probabilidad 0.196 → 0.105, de medio a bajo).
 
-Los umbrales no cambian con `rf_v4`: salen de las probabilidades fuera de muestra de la CV 5x5, que no dependen de con cuántos alumnos se entrena el modelo guardado.
+Con `rf_v5` (D12), PRE 2026: control 28 / 7 / 0, experimental 27 / 4 / 3. Frente a `rf_v4` solo cambia EST-038 (control): 0.535 → 0.493, de alto a medio, un caso de borde. En Neon: 55 bajo / 11 medio / 3 alto.
+
+Los umbrales no cambian con `rf_v4` (D11): salen de las probabilidades fuera de muestra de la CV 5x5, que no dependen de con cuántos alumnos se entrena el modelo guardado.
+
+## Validación contra el desenlace real 2026 (decisión D14, 2026-10-21)
+El directivo de la IE entregó el `deserto` real de los 70 alumnos 2026 (11 desertores, 58 no desertores; EST-020, trasladado, sin dato). Las 3 fichas coinciden alumno por alumno. Se guarda en `data/raw/2026_desenlace/` y **no** entra en las fichas PRE/POST ni en el entrenamiento. `ml/validar_desenlace.py` compara la predicción de `rf_v5` con los indicadores PRE (I bimestre) contra ese desenlace → `stats/output/7_validacion_desenlace.csv`. Es una validación descriptiva: con 11 desertores no hay potencia para una prueba de hipótesis. El `deserto` está cortado al **09/10/2026**, igual que el cierre del POST (D13).
+
+Resultados (n = 69):
+| Criterio | VP | FN | FP | VN | Recall | Precisión | F1 |
+|---|---|---|---|---|---|---|---|
+| Corte alto 0.50 | 1 | 10 | 2 | 56 | 0.09 | 0.33 | 0.14 |
+| Corte medio 0.222 | 5 | 6 | 9 | 49 | 0.45 | 0.36 | 0.40 |
+
+AUC 0.687 (control 0.583 con 9 desertores; experimental 0.922 con 2). Desertores por nivel: bajo 6 de 55, medio 4 de 11, alto 1 de 3. Este desempeño es mucho menor que el de la CV 5x5 sobre el histórico 2024 (AUC 0.994, F1 0.928). Hallazgos para declarar en Limitaciones y Discusión: (a) el modelo se entrenó con 70 alumnos de 2024 y 13 desertores (muestra pequeña), con 25 sintéticos; (b) el PRE usa solo el I bimestre y el desenlace (hasta el 09/10) incluye abandonos ocurridos durante el II y III bimestre, o por causas que los 3 indicadores no capturan; (c) el grupo experimental tuvo la intervención (los tutores actuaron sobre los casos de riesgo), lo que puede alterar el desenlace que el modelo predecía; (d) el control tiene 9 de 35 desertores y el experimental 2 de 34 (Fisher p = 0.045, exploratorio, no es la hipótesis de la tesis).
 
 ## Importancia de variables → sustento de OE1, OE2 y OE3
 - `feature_importances_` (MDI, reducción de impureza de Gini)
@@ -137,7 +166,8 @@ ml/.venv/Scripts/python ml/train.py --data <csv_con_indicadores_y_deserto> --ver
 | rf_v0 | 2026-09-25 | sintéticos (300, histórico simulado con ruido) | 300 | 0.42 | 0.24 | 0.35 | 0.29 | Solo prueba de pipeline; el generador agrega ruido a propósito, no se espera buen desempeño |
 | rf_v0b | 2026-09-25 | PRE 2026 real (69 alumnos) + Opción B (umbral) | 69 | 1.00 | 1.00 | 1.00 | 1.00 | **No es resultado.** Confirma la advertencia de la Opción B: el modelo reproduce la regla de etiquetado, no aprende deserción real |
 | rf_v3 | 2026-10-09 | Histórico 2024 v5 (70 alumnos, 13 desertores) + SMOTE x2 solo en entrenamiento (D8) | 70 | 0.93 | 0.75 | 1.00 | 0.86 | Holdout de 14 alumnos (3 positivos), inestable. Métrica principal: CV 5x5 sobre reales de `comparar_aumento.py` con SMOTE: AUC 0.993 ± 0.02, F1 0.911 ± 0.13, recall 0.967 ± 0.12, precision 0.893 ± 0.18, accuracy 0.966 ± 0.05. Importancia (permutación, holdout): asistencia 0.42, reuniones 0.33, promedio ≈ 0. El `.joblib` es el modelo del holdout (56 reales + 112 sintéticos); reemplazado en producción por `rf_v4` |
-| rf_v4 | 2026-10-10 | Igual que `rf_v3`, guardado con `--final` (D11): reentrenado con los 70 reales + 140 sintéticos SMOTE | 70 | 0.93 | 0.75 | 1.00 | 0.86 | **Modelo en producción.** Evaluación idéntica a `rf_v3` (misma CV, holdout, matriz [[10, 1], [0, 3]] e importancia): las métricas describen el procedimiento, el `.joblib` es el mismo procedimiento con todos los datos |
+| rf_v4 | 2026-10-10 | Igual que `rf_v3`, guardado con `--final` (D11): reentrenado con los 70 reales + 140 sintéticos SMOTE | 70 | 0.93 | 0.75 | 1.00 | 0.86 | Reemplazado en producción por `rf_v5` (D12). Evaluación idéntica a `rf_v3` (misma CV, holdout, matriz [[10, 1], [0, 3]] e importancia): las métricas describen el procedimiento, el `.joblib` es el mismo procedimiento con todos los datos |
+| rf_v5 | 2026-10-17 | Histórico 2024 v5 (70 alumnos, 13 desertores) + SMOTE solo desertores hasta 40 % en entrenamiento (D12), guardado con `--final`: 70 reales + 25 sintéticos | 70 | 0.93 | 0.75 | 1.00 | 0.86 | **Modelo en producción.** Holdout de 14 alumnos, igual que `rf_v3` (matriz [[10, 1], [0, 3]]). Métrica principal, CV 5x5 sobre reales: AUC 0.994 ± 0.01, F1 0.928 ± 0.11, recall 1.000 ± 0.00, precision 0.884 ± 0.18, accuracy 0.969 ± 0.05. Umbrales 0.222 / 0.50 |
 
 ### Modelo de producción (decisión D11, 2026-10-10)
 `train.py --final` evalúa igual que siempre (CV y holdout con el 80 %, más la CV 5x5 de `comparar_aumento.py`) y después reentrena la misma configuración con el 100 % de los alumnos reales y su aumento SMOTE. Ese es el modelo que se guarda y que carga el backend. Es la práctica habitual: la evaluación estima cómo rinde el procedimiento con alumnos nuevos, y el modelo final aprovecha todos los casos disponibles (13 desertores en vez de 10). No hay métricas propias del modelo con el 100 %, porque ya no quedan alumnos sin ver; la validación externa es el desenlace 2026 (D2). En Metodología se declara así: "las métricas se obtuvieron por validación cruzada; el modelo final se reentrenó con la totalidad del histórico".

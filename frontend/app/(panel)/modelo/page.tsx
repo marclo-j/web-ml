@@ -30,7 +30,11 @@ export default async function Modelo() {
         <h1 className="text-2xl font-bold tracking-tight">Modelo {m.version}</h1>
         <p className="text-sm text-slate-600">
           Random Forest · entrenado el {m.entrenado} con {m.n_entrenamiento} alumnos reales
-          {m.aumento ? ` + aumento ${m.aumento.metodo.toUpperCase()} ×${m.aumento.factor} solo en entrenamiento` : ""}
+          {m.aumento
+            ? m.aumento.proporcion_objetivo
+              ? ` + ${m.aumento.metodo.toUpperCase()} hasta ${Math.round(m.aumento.proporcion_objetivo * 100)} % de desertores solo en entrenamiento`
+              : ` + aumento ${m.aumento.metodo.toUpperCase()} ×${m.aumento.factor} solo en entrenamiento`
+            : ""}
         </p>
       </div>
       {m.aviso && <Aviso tipo="error">{m.aviso}</Aviso>}

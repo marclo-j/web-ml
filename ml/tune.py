@@ -53,17 +53,25 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data", type=Path, required=True)
     parser.add_argument("--aumentar", type=float, default=0)
+    parser.add_argument(
+        "--proporcion",
+        type=float,
+        default=None,
+        help="D12: aumenta solo la minoritaria hasta esta fracción de desertores",
+    )
     args = parser.parse_args()
     x, y = cargar_datos(args.data)
     fijos = {"class_weight": "balanced", "random_state": SEMILLA, "n_jobs": 1}
-    if args.aumentar > 0:
+    if args.aumentar > 0 or args.proporcion is not None:
         # Los hiperparámetros del RF viajan en un solo dict: la grilla es una
         # lista de dicts completos
         combinaciones = [
             dict(zip(GRILLA, valores), **fijos)
             for valores in itertools.product(*GRILLA.values())
         ]
-        base = RFAumentado(factor=args.aumentar, semilla=SEMILLA)
+        base = RFAumentado(
+            factor=args.aumentar, semilla=SEMILLA, proporcion=args.proporcion
+        )
         grilla = {"hiperparametros": combinaciones}
         inicial = base.set_params(
             hiperparametros={"n_estimators": 200, "min_samples_leaf": 2, **fijos}
@@ -77,7 +85,7 @@ def main() -> None:
     interna = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEMILLA)
     kw = {"cv": externa, "scoring": METRICAS, "return_estimator": True}
 
-    print(f"n={len(y)} positivos={int(y.sum())} aumento={args.aumentar}")
+    print(f"n={len(y)} positivos={int(y.sum())} aumento={args.aumentar} proporcion={args.proporcion}")
     ref = cross_validate(inicial, x, y, **kw)
     print("Configuración inicial (min_samples_leaf=2):", json.dumps(resumen(ref)))
 

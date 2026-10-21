@@ -28,3 +28,8 @@ stats/output/
 
 # Base local de desarrollo del backend
 backend/local.db
+
+# Documento de tesis (el repo es público; no publicar antes de Turnitin)
+CALDERON SALAZAR.docx
+CALDERON SALAZAR.pdf
+Avance de Tesis.html
